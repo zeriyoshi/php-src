@@ -34,6 +34,7 @@
 #include "ext/standard/php_uuencode.h"
 #include "ext/standard/php_mt_rand.h"
 #include "ext/standard/crc32_x86.h"
+#include "ext/standard/php_rng.h"
 
 #ifdef PHP_WIN32
 #include "win32/php_win32_globals.h"
@@ -351,6 +352,7 @@ PHP_MINIT_FUNCTION(basic) /* {{{ */
 	BASIC_MINIT_SUBMODULE(user_filters)
 	BASIC_MINIT_SUBMODULE(password)
 	BASIC_MINIT_SUBMODULE(mt_rand)
+	BASIC_MINIT_SUBMODULE(rng)
 
 #if defined(ZTS)
 	BASIC_MINIT_SUBMODULE(localeconv)
