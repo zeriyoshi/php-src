@@ -16,7 +16,7 @@
 #ifndef _RNG_RANDOMINTERFACE_H
 #define _RNG_RANDOMINTERFACE_H
 
-extern PHP_RNG_API zend_class_entry *rng_ce_RNG_RandomInterface;
+extern PHPAPI zend_class_entry *rng_ce_RNG_RandomInterface;
 
 PHP_MINIT_FUNCTION(rng_randominterface);
 

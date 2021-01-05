@@ -23,7 +23,7 @@
 #include "rng_randominterface.h"
 #include "rng_xorshift128plus.h"
 
-PHP_RNG_API php_rng* php_rng_initialize(uint64_t (*next)(php_rng*), void *obj)
+PHPAPI php_rng* php_rng_initialize(uint64_t (*next)(php_rng*), void *obj)
 {
 	/* Initializing common RNG struct */
 	php_rng *rng = (php_rng*)ecalloc(1, sizeof(php_rng));
@@ -33,7 +33,7 @@ PHP_RNG_API php_rng* php_rng_initialize(uint64_t (*next)(php_rng*), void *obj)
 	return rng;
 }
 
-PHP_RNG_API zend_long php_rng_next(php_rng *rng)
+PHPAPI zend_long php_rng_next(php_rng *rng)
 {
 	uint64_t next = rng->next(rng);
 
@@ -43,7 +43,7 @@ PHP_RNG_API zend_long php_rng_next(php_rng *rng)
 	return (zend_long) (((uint32_t) next) >> 1);
 }
 
-PHP_RNG_API zend_long php_rng_range(php_rng *rng, zend_long min, zend_long max)
+PHPAPI zend_long php_rng_range(php_rng *rng, zend_long min, zend_long max)
 {
 	/* The implementation is stolen from php_mt_rand_range() */
 	zend_ulong umax = max - min;
@@ -72,7 +72,7 @@ PHP_RNG_API zend_long php_rng_range(php_rng *rng, zend_long min, zend_long max)
 	return (zend_long) (result % umax) + min;
 }
 
-PHP_RNG_API void php_rng_array_shuffle(php_rng *rng, zval *array)
+PHPAPI void php_rng_array_shuffle(php_rng *rng, zval *array)
 {
 	/* The implementation is stolen from php_array_data_shuffle() */
 	uint32_t idx, j, n_elems;
@@ -153,7 +153,7 @@ PHP_RNG_API void php_rng_array_shuffle(php_rng *rng, zval *array)
 	}
 }
 
-PHP_RNG_API void php_rng_string_shuffle(php_rng *rng, char *str, zend_long len)
+PHPAPI void php_rng_string_shuffle(php_rng *rng, char *str, zend_long len)
 {
 	/* The implementation is stolen from php_string_shuffle() */
 
@@ -181,6 +181,6 @@ PHP_MINIT_FUNCTION(rng)
 {
 	PHP_MINIT(rng_rnginterface)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(rng_randominterface)(INIT_FUNC_ARGS_PASSTHRU);
-   	PHP_MINIT(rng_xorshift128plus)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(rng_xorshift128plus)(INIT_FUNC_ARGS_PASSTHRU);
 	return SUCCESS;
 }

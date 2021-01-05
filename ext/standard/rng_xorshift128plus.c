@@ -25,7 +25,7 @@
 
 #include "rng_randominterface.h"
 
-PHP_RNG_API zend_class_entry *ce_RNG_XorShift128Plus;
+PHPAPI zend_class_entry *ce_RNG_XorShift128Plus;
 
 static zend_object_handlers XorShift128Plus_handlers;
 

@@ -16,7 +16,7 @@
 #ifndef _RNG_RNGINTERFACE_H
 #define _RNG_RNGINTERFACE_H
 
-extern PHP_RNG_API zend_class_entry *rng_ce_RNG_RNGInterface;
+extern PHPAPI zend_class_entry *rng_ce_RNG_RNGInterface;
 
 PHP_MINIT_FUNCTION(rng_rnginterface);
 

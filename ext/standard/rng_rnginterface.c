@@ -19,7 +19,7 @@
 #include "rng_rnginterface.h"
 #include "rng_rnginterface_arginfo.h"
 
-PHP_RNG_API zend_class_entry *rng_ce_RNG_RNGInterface;
+PHPAPI zend_class_entry *rng_ce_RNG_RNGInterface;
 
 PHP_MINIT_FUNCTION(rng_rnginterface) /* {{{ */
 {
