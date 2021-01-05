@@ -4,17 +4,17 @@ Test inheritance classes.
 <?php
 const SEED = 50;
 
-foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $klass) {
-    $obj = new $klass(SEED);
+foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $class) {
+    $obj = new $class(SEED);
     if (! $obj instanceof \RNG\RNGInterface) {
-        die("NG, ${klass} has not implemented \\RNG\\RNGInterface.");
+        die("NG, ${class} has not implemented \\RNG\\RNGInterface.");
     }
 }
 
-foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_random_classes.inc') as $klass) {
-    $obj = new $klass(SEED);
+foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_random_classes.inc') as $class) {
+    $obj = new $class(SEED);
     if (! $obj instanceof \RNG\RandomInterface) {
-        die("NG, ${klass} has not implemented \\RNG\\RandomInterface.");
+        die("NG, ${class} has not implemented \\RNG\\RandomInterface.");
     }
 }
 
