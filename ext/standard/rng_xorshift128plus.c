@@ -172,7 +172,7 @@ PHP_METHOD(RNG_XorShift128Plus, __unserialize)
 		state->s[i] = strtoull(ZSTR_VAL(Z_STR_P(tmp)), NULL, 10);
 	}
 	members_zv = zend_hash_index_find(data, 2);
-	if (!members_zv || Z_TYPE_P(members_zv) != IS_ARRAY) {
+	if (!members_zv || Z_TYPE_P(members_zv) != IS_ARRAY || (state->s[0] == 0 && state->s[1] == 0)) {
 		zend_throw_exception(NULL, "Incomplete or ill-formed serialization data", 0);
 		RETURN_THROWS();
 	}
