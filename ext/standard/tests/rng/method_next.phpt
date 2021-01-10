@@ -9,7 +9,7 @@ foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $class =
     }
 }
 
-die('OK, result is corrected.');
+die('OK.');
 ?>
 --EXPECT--
-OK, result is corrected.
+OK.
