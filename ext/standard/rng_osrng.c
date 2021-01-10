@@ -59,7 +59,7 @@ static void free_object_storage(zend_object *object)
 
 PHP_METHOD(RNG_OSRNG, next)
 {	
-    RETURN_LONG((zend_long) (php_rng_next(getThis()) >> 1));
+    RETURN_LONG((zend_long) php_rng_next(ZEND_THIS));
 }
 
 PHP_METHOD(RNG_OSRNG, next64)
@@ -68,7 +68,7 @@ PHP_METHOD(RNG_OSRNG, next64)
     zend_value_error("Method doesn't supported 32bit integer range.");
     RETURN_THROWS();
 #endif
-    RETURN_LONG((zend_long) (php_rng_next64(getThis()) >> 1));
+    RETURN_LONG((zend_long) php_rng_next64(ZEND_THIS));
 }
 
 PHP_MINIT_FUNCTION(rng_osrng)
