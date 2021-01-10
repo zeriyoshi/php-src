@@ -1,0 +1,21 @@
+--TEST--
+Test function: rng_range() function.
+--FILE--
+<?php
+
+const SEED = 1234;
+
+foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $class) {
+    $rng = new $class(SEED);
+    foreach (range(0, 999) as $i) {
+        $next = rng_range($rng, 1, 10000);
+
+        if ($next < 0 || $next > 10000) {
+            die("NG, invalid number: ${next}.");
+        }
+    }
+}
+die('OK, rng_range() works correctly.');
+?>
+--EXPECT--
+OK, rng_range() works correctly.

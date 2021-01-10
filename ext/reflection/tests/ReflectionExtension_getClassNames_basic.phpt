@@ -8,7 +8,7 @@ $standard = new ReflectionExtension('standard');
 var_dump($standard->getClassNames());
 ?>
 --EXPECTF--
-array(4) {
+array(7) {
   [0]=>
   %s(22) "__PHP_Incomplete_Class"
   [1]=>
@@ -17,4 +17,10 @@ array(4) {
   %s(9) "Directory"
   [3]=>
   %s(14) "AssertionError"
+  [4]=>
+  %s(16) "RNG\RNGInterface"
+  [5]=>
+  %s(19) "RNG\XorShift128Plus"
+  [6]=>
+  %s(9) "RNG\OSRNG"
 }
