@@ -1,4 +1,4 @@
 <?php
 return [
-    '\\RNG\\XorShift128Plus',
+    '\\RNG\\XorShift128Plus' => true,
 ];

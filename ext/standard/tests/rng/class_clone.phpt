@@ -3,8 +3,8 @@ Test class: clone RNG classes.
 --FILE--
 <?php
 
-foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_clonable_rng_classes.inc') as $class) {
-    $rng1 = new $class(1);
+foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_clonable_rng_classes.inc') as $class => $is_seed) {
+    $rng1 = $is_seed ? new $class(random_int(PHP_INT_MIN, PHP_INT_MAX)) : new $class();
     $rng1->next();
 
     $rng2 = clone $rng1;

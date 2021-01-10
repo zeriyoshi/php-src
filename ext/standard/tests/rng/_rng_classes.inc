@@ -1,5 +1,5 @@
 <?php
 return [
-    '\\RNG\\XorShift128Plus',
-    '\\RNG\\OSRNG',
+    '\\RNG\\XorShift128Plus' => true,
+    '\\RNG\\OSRNG' => false,
 ];

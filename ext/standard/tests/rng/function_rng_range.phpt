@@ -5,8 +5,8 @@ Test function: rng_range() function.
 
 const SEED = 1234;
 
-foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $class) {
-    $rng = new $class(SEED);
+foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $class => $is_seed) {
+    $rng = $is_seed ? new $class(SEED) : new $class();
     foreach (range(0, 999) as $i) {
         $next = rng_range($rng, 1, 10000);
 

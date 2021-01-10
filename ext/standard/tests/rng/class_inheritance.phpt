@@ -2,10 +2,10 @@
 Test class: inheritance classes.
 --FILE--
 <?php
-const SEED = 50;
+const SEED = 1234;
 
-foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $class) {
-    $rng = new $class(SEED);
+foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_rng_classes.inc') as $class => $is_seed) {
+    $rng = $is_seed ? new $class(SEED) : new $class();
     if (! $rng instanceof \RNG\RNGInterface) {
         die("NG, ${class} has not implemented \\RNG\\RNGInterface.");
     }
