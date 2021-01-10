@@ -169,17 +169,17 @@ PHP_FUNCTION(rng_bytes)
 
 	result = zend_string_alloc(size, 0);
 
-	while (generated_bytes < size) {
+	while (generated_bytes <= size) {
 		buf = php_rng_next(zrng);
 		bytes = (uint8_t *) &buf;
-		for (i = 0; i < sizeof(uint32_t); i += sizeof(uint8_t)) {
+		for (i = 0; i < (sizeof(uint32_t) / sizeof(uint8_t)); i ++) {
 			ZSTR_VAL(result)[generated_bytes + i] = bytes[i];
 			if ((generated_bytes + i) >= size) {
 				ZSTR_VAL(result)[size] = '\0';
 				RETURN_STR(result);
 			}
 		}
-		generated_bytes += sizeof(uint8_t);
+		generated_bytes += (sizeof(uint32_t) / sizeof(uint8_t));
 	}
 }
 
