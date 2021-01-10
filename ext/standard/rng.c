@@ -104,8 +104,14 @@ PHPAPI zend_long php_rng_range(zval *obj, zend_long min, zend_long max)
 	zend_ulong umax = max - min;
 	zend_ulong result, limit;
 
-	/* Always use next() for 64/32bit compatibility. */
 	result = php_rng_next(obj);
+
+#if ZEND_ULONG_MAX > UINT32_MAX
+	/* If requested over the UINT32_MAX in 64bit environment, shift and twice call. */
+	if (umax > UINT32_MAX) {
+		result = (result << 32 | (php_rng_next(obj)));
+	}
+#endif
 
 	/* Special case where no modulus is required */
 	if (UNEXPECTED(umax == ZEND_ULONG_MAX)) {
