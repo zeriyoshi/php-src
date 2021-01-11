@@ -14,7 +14,7 @@
    +----------------------------------------------------------------------+
 */
 #ifndef _RNG_OSRNG_H
-#define _RNG_ORSNG_H
+#define _RNG_OSRNG_H
 
 #include "php.h"
 #include "php_rng.h"

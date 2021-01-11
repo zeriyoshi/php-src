@@ -134,10 +134,7 @@ static uint64_t rng_rand_range64(zval *obj, uint64_t umax)
 {
 	uint64_t result, limit;
 	
-	/* php_rng_next64() maybe makes incompatible RNG state in 32/64 bit architecture,
-	   uses php_rng_next() twice instead. */
-	result = php_rng_next(obj);
-	result = (result << 32) | php_rng_next(obj);
+	result = php_rng_next64(obj);
 
 	/* Special case where no modulus is required */
 	if (UNEXPECTED(umax == UINT64_MAX)) {
@@ -157,8 +154,7 @@ static uint64_t rng_rand_range64(zval *obj, uint64_t umax)
 
 	/* Discard numbers over the limit to avoid modulo bias */
 	while (UNEXPECTED(result > limit)) {
-		result = php_rng_next(obj);
-		result = (result << 32) | php_rng_next(obj);
+		result = php_rng_next64(obj);
 	}
 
 	return result % umax;
