@@ -98,40 +98,82 @@ PHPAPI uint64_t php_rng_next64(zval *obj)
 	return 0;
 }
 
-PHPAPI zend_long php_rng_range(zval *obj, zend_long min, zend_long max)
+static uint32_t rng_rand_range32(zval *obj, uint32_t umax)
 {
-	/* The implementation is stolen from php_mt_rand_range() */
-	zend_ulong umax = max - min;
-	zend_ulong result, limit;
+	uint32_t result, limit;
 
 	result = php_rng_next(obj);
 
-#if ZEND_ULONG_MAX > UINT32_MAX
-	/* If requested over the UINT32_MAX in 64bit environment, shift and twice call. */
-	if (umax > UINT32_MAX) {
-		result = (result << 32 | (php_rng_next(obj)));
-	}
-#endif
-
 	/* Special case where no modulus is required */
-	if (UNEXPECTED(umax == ZEND_ULONG_MAX)) {
+	if (UNEXPECTED(umax == UINT32_MAX)) {
 		return result;
 	}
+
+	/* Increment the max so the range is inclusive of max */
+	umax++;
 
 	/* Powers of two are not biased */
 	if ((umax & (umax - 1)) == 0) {
 		return result & (umax - 1);
 	}
 
-	/* Ceiling under which ZEND_ULONG_MAX % max == 0 */
-	limit = ZEND_ULONG_MAX - (ZEND_ULONG_MAX % umax) - 1;
+	/* Ceiling under which UINT32_MAX % max == 0 */
+	limit = UINT32_MAX - (UINT32_MAX % umax) - 1;
 
 	/* Discard numbers over the limit to avoid modulo bias */
 	while (UNEXPECTED(result > limit)) {
 		result = php_rng_next(obj);
 	}
 
-	return (zend_long) (result % umax) + min;
+	return result % umax;
+}
+
+#if ZEND_ULONG_MAX > UINT32_MAX
+static uint64_t rng_rand_range64(zval *obj, uint64_t umax)
+{
+	uint64_t result, limit;
+	
+	result = php_rng_next(obj);
+	result = (result << 32) | php_rng_next(obj);
+
+	/* Special case where no modulus is required */
+	if (UNEXPECTED(umax == UINT64_MAX)) {
+		return result;
+	}
+
+	/* Increment the max so the range is inclusive of max */
+	umax++;
+
+	/* Powers of two are not biased */
+	if ((umax & (umax - 1)) == 0) {
+		return result & (umax - 1);
+	}
+
+	/* Ceiling under which UINT64_MAX % max == 0 */
+	limit = UINT64_MAX - (UINT64_MAX % umax) - 1;
+
+	/* Discard numbers over the limit to avoid modulo bias */
+	while (UNEXPECTED(result > limit)) {
+		result = php_rng_next(obj);
+		result = (result << 32) | php_rng_next(obj);
+	}
+
+	return result % umax;
+}
+#endif
+
+PHPAPI zend_long php_rng_range(zval *obj, zend_long min, zend_long max)
+{
+	/* The implementation is stolen from php_mt_rand_range() */
+	zend_ulong umax = max - min;
+	
+#if ZEND_ULONG_MAX > UINT32_MAX
+	if (umax > UINT32_MAX) {
+		return (zend_long) (rng_rand_range64(obj, umax) + min);
+	}
+#endif
+
+	return (zend_long) (rng_rand_range32(obj, umax) + min);
 }
 
 PHP_FUNCTION(rng_range)
