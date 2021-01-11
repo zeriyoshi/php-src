@@ -88,7 +88,8 @@ PHPAPI uint64_t php_rng_next64(zval *obj)
 		if (rng->next64) {
 			return rng->next64(rng);
 		} else if (rng->next) {
-			/* Force generate uint64_t uses next() */
+			/* Uses next() twice to force generating uint64_t.
+			   Sometime makes incompatibility 32/64bit architecture, Be careful. */
 			uint64_t result = rng->next(rng);
 			result = (result << 32) | rng->next(rng);
 			return result;
@@ -133,6 +134,8 @@ static uint64_t rng_rand_range64(zval *obj, uint64_t umax)
 {
 	uint64_t result, limit;
 	
+	/* php_rng_next64() maybe makes incompatible RNG state in 32/64 bit architecture,
+	   uses php_rng_next() twice instead. */
 	result = php_rng_next(obj);
 	result = (result << 32) | php_rng_next(obj);
 
