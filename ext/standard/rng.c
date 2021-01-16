@@ -174,7 +174,7 @@ PHP_FUNCTION(rng_range)
 	zend_long min, max;
 
 	ZEND_PARSE_PARAMETERS_START(3, 3)
-		Z_PARAM_OBJECT_OF_CLASS_OR_NULL(zrng, rng_ce_RNG_RNGInterface)
+		Z_PARAM_OBJECT_OF_CLASS(zrng, rng_ce_RNG_RNGInterface)
 		Z_PARAM_LONG(min)
 		Z_PARAM_LONG(max)
 	ZEND_PARSE_PARAMETERS_END();
@@ -198,7 +198,7 @@ PHP_FUNCTION(rng_bytes)
 	int i;
 
 	ZEND_PARSE_PARAMETERS_START(2, 2)
-		Z_PARAM_OBJECT_OF_CLASS_OR_NULL(zrng, rng_ce_RNG_RNGInterface)
+		Z_PARAM_OBJECT_OF_CLASS(zrng, rng_ce_RNG_RNGInterface)
 		Z_PARAM_LONG(size)
 	ZEND_PARSE_PARAMETERS_END();
 

@@ -166,16 +166,23 @@ PHP_METHOD(RNG_MT19937, __construct)
 PHP_METHOD(RNG_MT19937, next)
 {	
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
+	ZEND_PARSE_PARAMETERS_NONE();
+	
 	RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_MT19937, next64)
 {
+	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
 #if UINT32_MAX >= ZEND_ULONG_MAX
 	zend_value_error("Method doesn't supported 32bit integer range.");
 	RETURN_THROWS();
 #endif
-	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
 	uint64_t result = rng->next(rng);
 	result = (result << 32) | rng->next(rng);
 	
@@ -189,9 +196,7 @@ PHP_METHOD(RNG_MT19937, __serialize)
 	zval tmp;
 	int i;
 
-	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_THROWS();
-	}
+	ZEND_PARSE_PARAMETERS_NONE();
 
 	array_init(return_value);
 	

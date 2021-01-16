@@ -60,12 +60,23 @@ static void free_object_storage(zend_object *object)
 PHP_METHOD(RNG_OSRNG, next)
 {	
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
 	RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_OSRNG, next64)
 {
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
+#if UINT32_MAX >= ZEND_ULONG_MAX
+	zend_value_error("Method doesn't supported 32bit integer range.");
+	RETURN_THROWS();
+#endif
+
 	RETURN_LONG((zend_long) rng->next64(rng));
 }
 

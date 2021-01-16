@@ -111,18 +111,25 @@ PHP_METHOD(RNG_XorShift128Plus, __construct)
 }
 
 PHP_METHOD(RNG_XorShift128Plus, next)
-{	
+{
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
 	RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_XorShift128Plus, next64)
 {
+	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
+	ZEND_PARSE_PARAMETERS_NONE();
+
 #if UINT32_MAX >= ZEND_ULONG_MAX
 	zend_value_error("Method doesn't supported 32bit integer range.");
 	RETURN_THROWS();
 #endif
-	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
 	RETURN_LONG((zend_long) rng->next64(rng));
 }
 
@@ -133,10 +140,8 @@ PHP_METHOD(RNG_XorShift128Plus, __serialize)
 	zval tmp;
 	int i;
 
-	if (zend_parse_parameters_none() == FAILURE) {
-		RETURN_THROWS();
-	}
-
+	ZEND_PARSE_PARAMETERS_NONE();
+	
 	array_init(return_value);
 	
 	/* state */
