@@ -4,7 +4,7 @@
 
 namespace RNG;
 
-final class XorShift128Plus implements RNGInterface
+class XorShift128Plus implements RNGInterface
 {
     public function __construct(int $seed) {}
     public function next(): int {}

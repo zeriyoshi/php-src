@@ -113,16 +113,16 @@ PHP_METHOD(RNG_XorShift128Plus, __construct)
 
 PHP_METHOD(RNG_XorShift128Plus, next)
 {	
-    RETURN_LONG((zend_long) php_rng_next(ZEND_THIS));
+	php_rng *rng = Z_RNG_P(ZEND_THIS);
+	
+    RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_XorShift128Plus, next64)
 {
-#if UINT32_MAX >= ZEND_ULONG_MAX
-    zend_value_error("Method doesn't supported 32bit integer range.");
-    RETURN_THROWS();
-#endif
-    RETURN_LONG((zend_long) php_rng_next64(ZEND_THIS));
+	php_rng *rng = Z_RNG_P(ZEND_THIS);
+
+    RETURN_LONG((zend_long) rng->next64(rng));
 }
 
 PHP_METHOD(RNG_XorShift128Plus, __serialize)
@@ -186,7 +186,6 @@ PHP_MINIT_FUNCTION(rng_xorshift128plus)
 
 	INIT_CLASS_ENTRY(ce, RNG_NAMESPACE "XorShift128Plus", class_RNG_XorShift128Plus_methods);
 	rng_ce_RNG_XorShift128Plus = zend_register_internal_class(&ce);
-	rng_ce_RNG_XorShift128Plus->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(rng_ce_RNG_XorShift128Plus, 1, rng_ce_RNG_RNGInterface);
 	rng_ce_RNG_XorShift128Plus->create_object = rng_object_new;
 	memcpy(&XorShift128Plus_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

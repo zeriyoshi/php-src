@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: e7a5837483e133946f6bf5940411870e66371b2a */
+ * Stub hash: acdb317b0447e65959ed285824fe7fd97be297a3 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_class_RNG_OSRNG_next, 0, 0, IS_LONG, 0)
 ZEND_END_ARG_INFO()

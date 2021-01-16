@@ -59,16 +59,14 @@ static void free_object_storage(zend_object *object)
 
 PHP_METHOD(RNG_OSRNG, next)
 {	
-    RETURN_LONG((zend_long) php_rng_next(ZEND_THIS));
+	php_rng *rng = Z_RNG_P(ZEND_THIS);
+    RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_OSRNG, next64)
 {
-#if UINT32_MAX >= ZEND_ULONG_MAX
-    zend_value_error("Method doesn't supported 32bit integer range.");
-    RETURN_THROWS();
-#endif
-    RETURN_LONG((zend_long) php_rng_next64(ZEND_THIS));
+	php_rng *rng = Z_RNG_P(ZEND_THIS);
+    RETURN_LONG((zend_long) rng->next64(rng));
 }
 
 PHP_MINIT_FUNCTION(rng_osrng)
@@ -77,7 +75,6 @@ PHP_MINIT_FUNCTION(rng_osrng)
 
 	INIT_CLASS_ENTRY(ce, RNG_NAMESPACE "OSRNG", class_RNG_OSRNG_methods);
 	rng_ce_RNG_OSRNG = zend_register_internal_class(&ce);
-	rng_ce_RNG_OSRNG->ce_flags |= ZEND_ACC_FINAL;
 	zend_class_implements(rng_ce_RNG_OSRNG, 1, rng_ce_RNG_RNGInterface);
 	rng_ce_RNG_OSRNG->create_object = rng_object_new;
 	memcpy(&OSRNG_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));

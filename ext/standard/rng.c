@@ -28,82 +28,72 @@ PHPAPI zend_class_entry *rng_ce_RNG_RNGInterface;
 
 PHPAPI php_rng* php_rng_initialize(uint32_t (*next)(php_rng*), uint64_t (*next64)(php_rng*))
 {
-	php_rng *rng = (php_rng*)ecalloc(1, sizeof(php_rng));
+	php_rng *rng = (php_rng*) ecalloc(1, sizeof(php_rng));
 	rng->next = next;
 	rng->next64 = next64;
 
 	return rng;
 }
 
-PHPAPI uint32_t php_rng_next(zval *obj)
-{
-	if (Z_OBJCE_P(obj)->type == ZEND_USER_CLASS) {
-		/* If user defined class, try to call userland implementation */
-		zval function_name, retval;
-		zend_long result;
-		ZVAL_STRING(&function_name, "next");
-
-		if (call_user_function(NULL, obj, &function_name, &retval, 0, NULL) == FAILURE) {
-			result = 0;
-		} else {
-			result = Z_LVAL(retval);
-		}
-
-		zval_ptr_dtor(&function_name);
-		return result;
-	} else {
-		/* Non user defined class always use php_rng struct */
-		php_rng *rng = Z_RNG_P(obj);	
-
-		if (rng->next) {
-			return (zend_long) (rng->next(rng));
-		} else if (rng->next64) {
-			return (zend_long) ((uint32_t) rng->next64(rng));
-		}
+PHPAPI int php_rng_next(uint32_t *result, zval *obj)
+{	
+	/* If internal classes, use php_rng struct. */
+	if (Z_OBJCE_P(obj)->type == ZEND_INTERNAL_CLASS) {
+		php_rng *rng = Z_RNG_P(obj);
+		
+		*result = rng->next(rng);
+		return SUCCESS;
 	}
 
-	return 0;
+	zend_function *function;
+	zval function_name, retval;
+
+	ZVAL_STRING(&function_name, "next");
+	function = zend_hash_find_ptr(&Z_OBJCE_P(obj)->function_table, Z_STR(function_name));
+	zval_ptr_dtor(&function_name);
+
+	if (!function) {
+		return FAILURE;
+	}
+
+	zend_call_known_instance_method_with_0_params(function, Z_OBJ_P(obj), &retval);
+	*result = Z_LVAL(retval);
+
+	return SUCCESS;
 }
 
-PHPAPI uint64_t php_rng_next64(zval *obj)
+PHPAPI int php_rng_next64(uint64_t *result, zval *obj)
 {	
-	if (Z_OBJCE_P(obj)->type == ZEND_USER_CLASS) {
-		/* If user defined class, try to call userland implementation */
-		zval function_name, retval;
-		zend_long result;
-		ZVAL_STRING(&function_name, "next64");
-
-		if (call_user_function(NULL, obj, &function_name, &retval, 0, NULL) == FAILURE) {
-			result = 0;
-		} else {
-			result = Z_LVAL(retval);
-		}
-
-		zval_ptr_dtor(&function_name);
-		return result;
-	} else {
-		/* Non user defined class always use php_rng struct */
+	/* If internal classes, use php_rng struct. */
+	if (Z_OBJCE_P(obj)->type == ZEND_INTERNAL_CLASS) {
 		php_rng *rng = Z_RNG_P(obj);
-
-		if (rng->next64) {
-			return rng->next64(rng);
-		} else if (rng->next) {
-			/* Uses next() twice to force generating uint64_t.
-			   Sometime makes incompatibility 32/64bit architecture, Be careful. */
-			uint64_t result = rng->next(rng);
-			result = (result << 32) | rng->next(rng);
-			return result;
-		} 
+		
+		*result = rng->next(rng);
+		return SUCCESS;
 	}
 
-	return 0;
+	zend_function *function;
+	zval function_name, retval;
+
+	ZVAL_STRING(&function_name, "next64");
+	function = zend_hash_find_ptr(&Z_OBJCE_P(obj)->function_table, Z_STR(function_name));
+	zval_ptr_dtor(&function_name);
+
+	if (!function) {
+		return FAILURE;
+	}
+
+	zend_call_known_instance_method_with_0_params(function, Z_OBJ_P(obj), &retval);
+	*result = Z_LVAL(retval);
+
+	return SUCCESS;
 }
 
 static uint32_t rng_rand_range32(zval *obj, uint32_t umax)
 {
 	uint32_t result, limit;
 
-	result = php_rng_next(obj);
+	php_rng_next(&result, obj);
 
 	/* Special case where no modulus is required */
 	if (UNEXPECTED(umax == UINT32_MAX)) {
@@ -123,7 +113,7 @@ static uint32_t rng_rand_range32(zval *obj, uint32_t umax)
 
 	/* Discard numbers over the limit to avoid modulo bias */
 	while (UNEXPECTED(result > limit)) {
-		result = php_rng_next(obj);
+		php_rng_next(&result, obj);
 	}
 
 	return result % umax;
@@ -134,7 +124,7 @@ static uint64_t rng_rand_range64(zval *obj, uint64_t umax)
 {
 	uint64_t result, limit;
 	
-	result = php_rng_next64(obj);
+	php_rng_next64(&result, obj);
 
 	/* Special case where no modulus is required */
 	if (UNEXPECTED(umax == UINT64_MAX)) {
@@ -154,7 +144,7 @@ static uint64_t rng_rand_range64(zval *obj, uint64_t umax)
 
 	/* Discard numbers over the limit to avoid modulo bias */
 	while (UNEXPECTED(result > limit)) {
-		result = php_rng_next64(obj);
+		php_rng_next64(&result, obj);
 	}
 
 	return result % umax;
@@ -217,7 +207,7 @@ PHP_FUNCTION(rng_bytes)
 	result = zend_string_alloc(size, 0);
 
 	while (generated_bytes <= size) {
-		buf = php_rng_next(zrng);
+		php_rng_next(&buf, zrng); //TODO: check FAILURE
 		bytes = (uint8_t *) &buf;
 		for (i = 0; i < (sizeof(uint32_t) / sizeof(uint8_t)); i ++) {
 			ZSTR_VAL(result)[generated_bytes + i] = bytes[i];

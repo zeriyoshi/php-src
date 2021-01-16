@@ -40,8 +40,8 @@ PHP_MINIT_FUNCTION(rng);
 #define RNG_NAMESPACE "RNG\\"
 
 PHPAPI php_rng *php_rng_initialize(uint32_t (*next)(php_rng*), uint64_t (*next64)(php_rng*));
-PHPAPI uint32_t php_rng_next(zval*);
-PHPAPI uint64_t php_rng_next64(zval*);
+PHPAPI int php_rng_next(uint32_t*, zval*);
+PHPAPI int php_rng_next64(uint64_t*, zval*);
 PHPAPI zend_long php_rng_range(zval*, zend_long, zend_long);
 
 #endif
