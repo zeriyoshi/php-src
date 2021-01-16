@@ -4,7 +4,7 @@
 
 namespace RNG;
 
-class OSRNG implements RNGInterface
+class OSRNG implements RNG64Interface
 {
     public function next(): int {}
     /** @throws ValueError */

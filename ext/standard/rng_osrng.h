@@ -19,7 +19,7 @@
 #include "php.h"
 #include "php_rng.h"
 
-extern PHPAPI zend_class_entry *rng_rng_ce_RNG_OSRNG;
+extern PHPAPI zend_class_entry *rng_ce_RNG_OSRNG;
 
 PHP_MINIT_FUNCTION(rng_osrng);
 

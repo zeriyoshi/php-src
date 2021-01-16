@@ -19,7 +19,7 @@
 #include "php.h"
 #include "php_rng.h"
 
-extern PHPAPI zend_class_entry *rng_rng_ce_RNG_XorShift128Plus;
+extern PHPAPI zend_class_entry *rng_ce_RNG_XorShift128Plus;
 
 typedef struct _rng_xorshift128plus_state {
     uint64_t s[2];

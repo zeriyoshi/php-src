@@ -75,7 +75,7 @@ PHP_MINIT_FUNCTION(rng_osrng)
 
 	INIT_CLASS_ENTRY(ce, RNG_NAMESPACE "OSRNG", class_RNG_OSRNG_methods);
 	rng_ce_RNG_OSRNG = zend_register_internal_class(&ce);
-	zend_class_implements(rng_ce_RNG_OSRNG, 1, rng_ce_RNG_RNGInterface);
+	zend_class_implements(rng_ce_RNG_OSRNG, 1, rng_ce_RNG_RNG64Interface);
 	rng_ce_RNG_OSRNG->create_object = rng_object_new;
 	memcpy(&OSRNG_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	OSRNG_handlers.offset = XtOffsetOf(php_rng, std);

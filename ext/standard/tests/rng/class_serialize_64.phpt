@@ -1,5 +1,11 @@
 --TEST--
-Test class: serialize in supported RNG classes.
+Test class: serialize in supported RNG classes in 64bit range.
+--SKIPIF--
+<?php
+if (PHP_INT_SIZE < 8) {
+    echo 'skip this test only available on 64bit enviroment.';
+}
+?>
 --FILE--
 <?php
 foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_serializable_rng_classes.inc') as $class => $is_seed) {
@@ -13,11 +19,11 @@ foreach (include(__DIR__ . DIRECTORY_SEPARATOR . '_serializable_rng_classes.inc'
     $t->next();
 
     $s = serialize($t);
-    $t_next = $t->next();
+    $t_next64 = $t->next64();
     $ut = unserialize($s);
-    $ut_next = $ut->next();
-    if ($ut_next !== $t_next) {
-        die("NG, broken detected. class: ${class} method: next() correct: ${t_next} result: ${ut_next}");
+    $ut_next64 = $ut->next64();
+    if ($ut_next64 !== $t_next64) {
+        die("NG, broken detected. class: ${class} method: next64() correct: ${t_next64} result: ${ut_next64}");
     }
     if ($ut->foo !== 'bar' ||
         $ut->bar !== 1234 ||

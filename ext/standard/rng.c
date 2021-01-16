@@ -20,11 +20,13 @@
 #include "php_rng.h"
 
 #include "rng_rnginterface_arginfo.h"
+#include "rng_rng64interface_arginfo.h"
 
 #include "rng_xorshift128plus.h"
 #include "rng_osrng.h"
 
 PHPAPI zend_class_entry *rng_ce_RNG_RNGInterface;
+PHPAPI zend_class_entry *rng_ce_RNG_RNG64Interface;
 
 PHPAPI php_rng* php_rng_initialize(uint32_t (*next)(php_rng*), uint64_t (*next64)(php_rng*))
 {
@@ -222,9 +224,14 @@ PHP_FUNCTION(rng_bytes)
 
 PHP_MINIT_FUNCTION(rng)
 {
-	zend_class_entry ce;
-	INIT_CLASS_ENTRY(ce, RNG_NAMESPACE "RNGInterface", class_RNG_RNGInterface_methods);
-	rng_ce_RNG_RNGInterface = zend_register_internal_interface(&ce);
+	zend_class_entry ce_rng, ce_rng64;
+
+	INIT_CLASS_ENTRY(ce_rng, RNG_NAMESPACE "RNGInterface", class_RNG_RNGInterface_methods);
+	rng_ce_RNG_RNGInterface = zend_register_internal_interface(&ce_rng);
+
+	INIT_CLASS_ENTRY(ce_rng64, RNG_NAMESPACE "RNG64Interface", class_RNG_RNG64Interface_methods);
+	rng_ce_RNG_RNG64Interface = zend_register_internal_interface(&ce_rng64);
+	zend_class_implements(rng_ce_RNG_RNG64Interface, 1, rng_ce_RNG_RNGInterface);
 
 	PHP_MINIT(rng_xorshift128plus)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(rng_osrng)(INIT_FUNC_ARGS_PASSTHRU);
