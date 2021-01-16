@@ -15,7 +15,7 @@
 */
 
 /*
-	The following php_mt_...() functions are based on a C++ class MTRand by
+	The following functions are based on a C++ class MTRand by
 	Richard J. Wagner. For more information see the web page at
 	http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/VERSIONS/C-LANG/MersenneTwister.h
 
@@ -81,8 +81,8 @@ static zend_object_handlers MT19937_handlers;
 
 static inline void reload(rng_mt19937_state *state)
 {
-    uint32_t *p = state->s;
-    int i;
+	uint32_t *p = state->s;
+	int i;
 
 	for (i = MT19937_N - MT19937_M; i--; ++p)
 		*p = MT19937_twist(p[MT19937_M], p[0], p[1]);
@@ -90,42 +90,42 @@ static inline void reload(rng_mt19937_state *state)
 		*p = MT19937_twist(p[MT19937_M-MT19937_N], p[0], p[1]);
 	*p = MT19937_twist(p[MT19937_M-MT19937_N], p[0], state->s[0]);
 
-    state->i = 0;
+	state->i = 0;
 }
 
 static uint32_t next(php_rng *rng)
 {
-    rng_mt19937_state *state = rng->state;
-    uint32_t s1;
-    
-    if (state->i >= MT19937_N) {
-        reload(state);
-    }
+	rng_mt19937_state *state = rng->state;
+	uint32_t s1;
+	
+	if (state->i >= MT19937_N) {
+		reload(state);
+	}
 
-    s1 = state->s[state->i++];
-    s1 ^= (s1 >> 11);
-    s1 ^= (s1 << 7) & 0x9d2c5680U;
-    s1 ^= (s1 << 15) & 0xefc60000U;
-    return ( s1 ^ (s1 >> 18) );
+	s1 = state->s[state->i++];
+	s1 ^= (s1 >> 11);
+	s1 ^= (s1 << 7) & 0x9d2c5680U;
+	s1 ^= (s1 << 15) & 0xefc60000U;
+	return ( s1 ^ (s1 >> 18) );
 }
 
 static zend_object *rng_object_new(zend_class_entry *ce)
 {
-    php_rng *rng = php_rng_initialize(next, NULL);
-    rng->state = (rng_mt19937_state*)ecalloc(1, sizeof(rng_mt19937_state));
-    zend_object_std_init(&rng->std, ce);
-    rng->std.handlers = &MT19937_handlers;
+	php_rng *rng = php_rng_initialize(next, NULL);
+	rng->state = (rng_mt19937_state*)ecalloc(1, sizeof(rng_mt19937_state));
+	zend_object_std_init(&rng->std, ce);
+	rng->std.handlers = &MT19937_handlers;
 
-    return &rng->std;
+	return &rng->std;
 }
 
 static void free_object_storage(zend_object *object)
 {
-    php_rng *rng = rng_from_obj(object);
-    zend_object_std_dtor(&rng->std);
-    if (rng->state != NULL) {
-        efree(rng->state);
-    }
+	php_rng *rng = rng_from_obj(object);
+	zend_object_std_dtor(&rng->std);
+	if (rng->state != NULL) {
+		efree(rng->state);
+	}
 }
 
 static zend_object *rng_clone_obj(zend_object *object)
@@ -147,39 +147,39 @@ static zend_object *rng_clone_obj(zend_object *object)
 
 PHP_METHOD(RNG_MT19937, __construct)
 {
-    zend_long seed;
+	zend_long seed;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_LONG(seed);
-    ZEND_PARSE_PARAMETERS_END();
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_LONG(seed);
+	ZEND_PARSE_PARAMETERS_END();
 
-    php_rng *rng = Z_RNG_P(ZEND_THIS);
-    rng_mt19937_state *state = rng->state;
+	php_rng *rng = Z_RNG_P(ZEND_THIS);
+	rng_mt19937_state *state = rng->state;
 
-    state->s[0] = seed & 0xffffffffU;
-    for (state->i = 1; state->i < MT19937_N; state->i++) {
-        state->s[state->i] = (1812433253U * (state->s[state->i - 1] ^ (state->s[state->i - 1] >> 30)) + state->i) & 0xffffffffU;
-    }
-    reload(state);
+	state->s[0] = seed & 0xffffffffU;
+	for (state->i = 1; state->i < MT19937_N; state->i++) {
+		state->s[state->i] = (1812433253U * (state->s[state->i - 1] ^ (state->s[state->i - 1] >> 30)) + state->i) & 0xffffffffU;
+	}
+	reload(state);
 }
 
 PHP_METHOD(RNG_MT19937, next)
 {	
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
-    RETURN_LONG((zend_long) rng->next(rng));
+	RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_MT19937, next64)
 {
 #if UINT32_MAX >= ZEND_ULONG_MAX
-    zend_value_error("Method doesn't supported 32bit integer range.");
-    RETURN_THROWS();
+	zend_value_error("Method doesn't supported 32bit integer range.");
+	RETURN_THROWS();
 #endif
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
-    uint64_t result = rng->next(rng);
-    result = (result << 32) | rng->next(rng);
-    
-    RETURN_LONG((zend_long) result);
+	uint64_t result = rng->next(rng);
+	result = (result << 32) | rng->next(rng);
+	
+	RETURN_LONG((zend_long) result);
 }
 
 PHP_METHOD(RNG_MT19937, __serialize)
@@ -200,8 +200,8 @@ PHP_METHOD(RNG_MT19937, __serialize)
 		ZVAL_LONG(&tmp,state->s[i]);
 		zend_hash_next_index_insert(Z_ARRVAL_P(return_value), &tmp);
 	}
-    ZVAL_LONG(&tmp, state->i);
-    zend_hash_next_index_insert(Z_ARRVAL_P(return_value), &tmp);
+	ZVAL_LONG(&tmp, state->i);
+	zend_hash_next_index_insert(Z_ARRVAL_P(return_value), &tmp);
 
 	/* members */
 	ZVAL_ARR(&tmp, zend_std_get_properties(&intern->std));
@@ -221,7 +221,7 @@ PHP_METHOD(RNG_MT19937, __unserialize)
 		RETURN_THROWS();
 	}
 
-    /* state */
+	/* state */
 	for (i = 0; i < MT19937_N + 1; i++) {
 		tmp = zend_hash_index_find(data, i);
 		if (Z_TYPE_P(tmp) != IS_LONG) {
@@ -231,14 +231,14 @@ PHP_METHOD(RNG_MT19937, __unserialize)
 
 		state->s[i] = Z_LVAL_P(tmp);
 	}
-    tmp = zend_hash_index_find(data, MT19937_N + 1);
-    if (Z_TYPE_P(tmp) != IS_LONG) {
+	tmp = zend_hash_index_find(data, MT19937_N + 1);
+	if (Z_TYPE_P(tmp) != IS_LONG) {
 		zend_throw_exception(NULL, "Incomplete or ill-formed serialization data", 0);
 		RETURN_THROWS();
-    }
-    state->i = Z_LVAL_P(tmp);
+	}
+	state->i = Z_LVAL_P(tmp);
 
-    /* members */
+	/* members */
 	members_zv = zend_hash_index_find(data, MT19937_N + 2);
 	if (!members_zv || Z_TYPE_P(members_zv) != IS_ARRAY) {
 		zend_throw_exception(NULL, "Incomplete or ill-formed serialization data", 0);

@@ -24,7 +24,7 @@ extern PHPAPI zend_class_entry *rng_ce_RNG_XorShift128Plus;
 #define XORSHIFT128PLUS_N 2
 
 typedef struct _rng_xorshift128plus_state {
-    uint64_t s[XORSHIFT128PLUS_N];
+	uint64_t s[XORSHIFT128PLUS_N];
 } rng_xorshift128plus_state;
 
 PHP_MINIT_FUNCTION(rng_xorshift128plus);

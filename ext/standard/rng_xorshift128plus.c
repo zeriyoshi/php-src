@@ -37,7 +37,7 @@ static uint64_t splitmix64(uint64_t *seed)
 
 static uint32_t next(php_rng *rng)
 {
-    return (uint32_t) (rng->next64(rng));
+	return (uint32_t) (rng->next64(rng));
 }
 
 static uint64_t next64(php_rng *rng)
@@ -113,17 +113,17 @@ PHP_METHOD(RNG_XorShift128Plus, __construct)
 PHP_METHOD(RNG_XorShift128Plus, next)
 {	
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
-    RETURN_LONG((zend_long) rng->next(rng));
+	RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_XorShift128Plus, next64)
 {
 #if UINT32_MAX >= ZEND_ULONG_MAX
-    zend_value_error("Method doesn't supported 32bit integer range.");
-    RETURN_THROWS();
+	zend_value_error("Method doesn't supported 32bit integer range.");
+	RETURN_THROWS();
 #endif
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
-    RETURN_LONG((zend_long) rng->next64(rng));
+	RETURN_LONG((zend_long) rng->next64(rng));
 }
 
 PHP_METHOD(RNG_XorShift128Plus, __serialize)

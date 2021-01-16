@@ -15,7 +15,7 @@
 */
 
 /*
-	The following php_mt_...() functions are based on a C++ class MTRand by
+	The following functions are based on a C++ class MTRand by
 	Richard J. Wagner. For more information see the web page at
 	http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/VERSIONS/C-LANG/MersenneTwister.h
 
@@ -73,20 +73,20 @@
 #include "php.h"
 #include "php_rng.h"
 
-#define MT19937_N                (624)
-#define MT19937_M                (397)
+#define MT19937_N				(624)
+#define MT19937_M				(397)
 
-#define MT19937_hiBit(u)         ((u) & 0x80000000U)
-#define MT19937_loBit(u)         ((u) & 0x00000001U)
-#define MT19937_loBits(u)        ((u) & 0x7FFFFFFFU)
-#define MT19937_MixBits(u, v)    (MT19937_hiBit(u)|MT19937_loBits(v))
-#define MT19937_twist(m,u,v)     (m ^ (MT19937_MixBits(u,v)>>1) ^ ((uint32_t)(-(int32_t)(MT19937_loBit(v))) & 0x9908b0dfU))
+#define MT19937_hiBit(u)		((u) & 0x80000000U)
+#define MT19937_loBit(u)		((u) & 0x00000001U)
+#define MT19937_loBits(u)		((u) & 0x7FFFFFFFU)
+#define MT19937_MixBits(u, v)	(MT19937_hiBit(u)|MT19937_loBits(v))
+#define MT19937_twist(m,u,v)	(m ^ (MT19937_MixBits(u,v)>>1) ^ ((uint32_t)(-(int32_t)(MT19937_loBit(v))) & 0x9908b0dfU))
 
 extern PHPAPI zend_class_entry *rng_ce_RNG_MT19937;
 
 typedef struct _rng_mt19937_state {
-    uint32_t s[MT19937_N + 1];
-    int i;
+	uint32_t s[MT19937_N + 1];
+	int i;
 } rng_mt19937_state;
 
 PHP_MINIT_FUNCTION(rng_mt19937);

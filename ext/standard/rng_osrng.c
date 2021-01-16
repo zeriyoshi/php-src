@@ -60,13 +60,13 @@ static void free_object_storage(zend_object *object)
 PHP_METHOD(RNG_OSRNG, next)
 {	
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
-    RETURN_LONG((zend_long) rng->next(rng));
+	RETURN_LONG((zend_long) rng->next(rng));
 }
 
 PHP_METHOD(RNG_OSRNG, next64)
 {
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
-    RETURN_LONG((zend_long) rng->next64(rng));
+	RETURN_LONG((zend_long) rng->next64(rng));
 }
 
 PHP_MINIT_FUNCTION(rng_osrng)
