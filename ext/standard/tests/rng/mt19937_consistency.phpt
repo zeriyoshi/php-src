@@ -8,7 +8,7 @@ for ($i = 0; $i < 100; $i++) {
     $rng = new \RNG\MT19937($seed);
     \mt_srand($seed);
     for ($j = 0; $j < 1000; $j++) {
-        $rng_next = ($rng->next() >> 1);
+        $rng_next = ($rng->next() >> 1 & PHP_INT_MAX); // virtually logical shift
         $func_next = \mt_rand();
 
         if ($rng_next !== $func_next) {
