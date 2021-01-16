@@ -58,9 +58,8 @@ static uint64_t next64(php_rng *rng)
 
 static zend_object *rng_object_new(zend_class_entry *ce)
 {
-	rng_xorshift128plus_state *state = (rng_xorshift128plus_state*)ecalloc(1, sizeof(rng_xorshift128plus_state));
 	php_rng *rng = php_rng_initialize(next, next64);
-	rng->state = state;
+	rng->state = (rng_xorshift128plus_state*)ecalloc(1, sizeof(rng_xorshift128plus_state));
 	zend_object_std_init(&rng->std, ce);
 	object_properties_init(&rng->std, ce);
 	rng->std.handlers = &XorShift128Plus_handlers;
@@ -104,7 +103,7 @@ PHP_METHOD(RNG_XorShift128Plus, __construct)
 	ZEND_PARSE_PARAMETERS_END();
 
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
-	rng_xorshift128plus_state* state = rng->state;
+	rng_xorshift128plus_state *state = rng->state;
 
 	s = (uint64_t) seed;
 	state->s[0] = splitmix64(&s);
@@ -119,6 +118,10 @@ PHP_METHOD(RNG_XorShift128Plus, next)
 
 PHP_METHOD(RNG_XorShift128Plus, next64)
 {
+#if UINT32_MAX >= ZEND_ULONG_MAX
+    zend_value_error("Method doesn't supported 32bit integer range.");
+    RETURN_THROWS();
+#endif
 	php_rng *rng = Z_RNG_P(ZEND_THIS);
     RETURN_LONG((zend_long) rng->next64(rng));
 }
@@ -160,7 +163,8 @@ PHP_METHOD(RNG_XorShift128Plus, __unserialize)
 		RETURN_THROWS();
 	}
 
-	for (i = 0; i < 2; i++) {
+	/* state */
+	for (i = 0; i < XORSHIFT128PLUS_N; i++) {
 		tmp = zend_hash_index_find(data, i);
 		if (Z_TYPE_P(tmp) != IS_STRING) {
 			zend_throw_exception(NULL, "Incomplete or ill-formed serialization data", 0);
@@ -169,7 +173,9 @@ PHP_METHOD(RNG_XorShift128Plus, __unserialize)
 
 		state->s[i] = strtoull(ZSTR_VAL(Z_STR_P(tmp)), NULL, 10);
 	}
-	members_zv = zend_hash_index_find(data, 2);
+
+	/* members */
+	members_zv = zend_hash_index_find(data, XORSHIFT128PLUS_N);
 	if (!members_zv || Z_TYPE_P(members_zv) != IS_ARRAY || (state->s[0] == 0 && state->s[1] == 0)) {
 		zend_throw_exception(NULL, "Incomplete or ill-formed serialization data", 0);
 		RETURN_THROWS();

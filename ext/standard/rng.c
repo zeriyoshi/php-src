@@ -23,6 +23,7 @@
 #include "rng_rng64interface_arginfo.h"
 
 #include "rng_xorshift128plus.h"
+#include "rng_mt19937.h"
 #include "rng_osrng.h"
 
 PHPAPI zend_class_entry *rng_ce_RNG_RNGInterface;
@@ -234,6 +235,7 @@ PHP_MINIT_FUNCTION(rng)
 	zend_class_implements(rng_ce_RNG_RNG64Interface, 1, rng_ce_RNG_RNGInterface);
 
 	PHP_MINIT(rng_xorshift128plus)(INIT_FUNC_ARGS_PASSTHRU);
+	PHP_MINIT(rng_mt19937)(INIT_FUNC_ARGS_PASSTHRU);
 	PHP_MINIT(rng_osrng)(INIT_FUNC_ARGS_PASSTHRU);
 
 	return SUCCESS;
