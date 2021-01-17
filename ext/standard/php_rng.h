@@ -26,6 +26,7 @@ typedef struct _php_rng php_rng;
 typedef struct _php_rng {
 	uint32_t (*next)(php_rng*);
 	uint64_t (*next64)(php_rng*);
+	zend_long (*range)(php_rng*); // optional for object defined range implementation.
 	void *state;
 	zend_object std;
 } php_rng;

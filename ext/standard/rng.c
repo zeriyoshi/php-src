@@ -171,6 +171,14 @@ static uint64_t rng_rand_range64(zval *obj, uint64_t umax)
 
 PHPAPI zend_long php_rng_range(zval *obj, zend_long min, zend_long max)
 {
+	/* Checking object defined range implementation. */
+	if (Z_OBJCE_P(obj)->type == ZEND_INTERNAL_CLASS) {
+		php_rng *rng = Z_RNG_P(obj);
+		if (rng->range) {
+			return rng->range(rng);
+		}
+	}
+
 	/* The implementation is stolen from php_mt_rand_range() */
 	zend_ulong umax = max - min;
 	
