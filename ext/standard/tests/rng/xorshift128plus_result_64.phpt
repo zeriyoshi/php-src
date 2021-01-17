@@ -9,6 +9,7 @@ if (PHP_INT_SIZE < 8) {
 --FILE--
 <?php
 const SEED = 12345;
+// ./sapi/cli/php -r '$t = new \RNG\XorShift128Plus(12345); $arr = []; for ($i = 0; $i < 1000; $i++) { $arr[] = $t->next64(); } var_export($arr);'
 $result = array (
   0 => 6233086606872742541,
   1 => 8068093359486558699,

@@ -9,6 +9,7 @@ if (PHP_INT_SIZE < 8) {
 --FILE--
 <?php
 const SEED = 12345;
+// ./sapi/cli/php -r '$t = new \RNG\MT19937(12345); $arr = []; for ($i = 0; $i < 1000; $i++) { $arr[] = $t->next64(); } var_export($arr);'
 $result = array (
   0 => -1298354032638611995,
   1 => 5836098993699293313,

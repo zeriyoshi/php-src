@@ -3,6 +3,7 @@ Test class: MT19937: consistent result.
 --FILE--
 <?php
 const SEED = 12345;
+// ./sapi/cli/php -r '$t = new \RNG\MT19937(12345); $arr = []; for ($i = 0; $i < 1000; $i++) { $arr[] = $t->next() >> 1 & PHP_INT_MAX; } var_export($arr);'
 $result = array (
   0 => 1996335345,
   1 => 1911592690,
