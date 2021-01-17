@@ -44,7 +44,14 @@ PHPAPI int php_rng_next(uint32_t *result, zval *obj)
 	if (Z_OBJCE_P(obj)->type == ZEND_INTERNAL_CLASS) {
 		php_rng *rng = Z_RNG_P(obj);
 		
-		*result = rng->next(rng);
+		if (rng->next) {
+			*result = rng->next(rng);
+		} else if (rng->next64) {
+			*result = (uint32_t) (rng->next64(rng));
+		} else {
+			return FAILURE;
+		}
+		
 		return SUCCESS;
 	}
 
@@ -71,7 +78,15 @@ PHPAPI int php_rng_next64(uint64_t *result, zval *obj)
 	if (Z_OBJCE_P(obj)->type == ZEND_INTERNAL_CLASS) {
 		php_rng *rng = Z_RNG_P(obj);
 		
-		*result = rng->next(rng);
+		if (rng->next64) {
+			*result = rng->next64(rng);
+		} else if (rng->next) {
+			*result = rng->next(rng);
+			*result = (*result << 32) | rng->next(rng);
+		} else {
+			return FAILURE;
+		}
+
 		return SUCCESS;
 	}
 
