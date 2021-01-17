@@ -84,10 +84,12 @@ static inline void reload(rng_mt19937_state *state)
 	uint32_t *p = state->s;
 	int i;
 
-	for (i = MT19937_N - MT19937_M; i--; ++p)
+	for (i = MT19937_N - MT19937_M; i--; ++p) {
 		*p = MT19937_twist(p[MT19937_M], p[0], p[1]);
-	for (i = MT19937_M; --i; ++p)
+	}
+	for (i = MT19937_M; --i; ++p) {
 		*p = MT19937_twist(p[MT19937_M-MT19937_N], p[0], p[1]);
+	}
 	*p = MT19937_twist(p[MT19937_M-MT19937_N], p[0], state->s[0]);
 
 	state->i = 0;

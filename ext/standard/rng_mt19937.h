@@ -73,6 +73,8 @@
 #include "php.h"
 #include "php_rng.h"
 
+/* stolen from mt_rand.c */
+
 #define MT19937_N             (624)
 #define MT19937_M             (397)
 

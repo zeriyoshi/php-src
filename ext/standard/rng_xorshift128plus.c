@@ -145,7 +145,7 @@ PHP_METHOD(RNG_XorShift128Plus, __serialize)
 	array_init(return_value);
 	
 	/* state */
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < XORSHIFT128PLUS_N; i++) {
 		ZVAL_STR(&tmp, zend_strpprintf(0, "%" PRIu64, state->s[i]));
 		zend_hash_next_index_insert(Z_ARRVAL_P(return_value), &tmp);
 	}
