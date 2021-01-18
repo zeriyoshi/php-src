@@ -31,7 +31,7 @@ PHPAPI zend_class_entry *rng_ce_RNG_RNG64Interface;
 
 PHPAPI php_rng* php_rng_initialize(uint32_t (*next)(php_rng*), uint64_t (*next64)(php_rng*))
 {
-	php_rng *rng = (php_rng*) ecalloc(1, sizeof(php_rng));
+	php_rng *rng = (php_rng*)ecalloc(1, sizeof(php_rng));
 	rng->next = next;
 	rng->next64 = next64;
 
