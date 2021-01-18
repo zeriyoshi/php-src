@@ -3,7 +3,7 @@ Test class: XorShift128Plus: consistent result.
 --FILE--
 <?php
 const SEED = 12345;
-// ./sapi/cli/php -r '$t = new \RNG\XorShift128Plus(12345); $arr = []; for ($i = 0; $i < 1000; $i++) { $arr[] = $t->next() >> 1 & PHP_INT_MAX; } var_export($arr);'
+// ./sapi/cli/php -r '$t = new \RNG\XorShift128Plus(12345); $arr = []; for ($i = 0; $i < 1000; $i++) { $arr[] = rng_rand($t); } var_export($arr);'
 $result = array (
   0 => 1349682502,
   1 => 2037461237,
@@ -1009,8 +1009,7 @@ $result = array (
 
 $rng = new \RNG\XorShift128Plus(SEED);
 foreach ($result as $ret) {
-    /* virtually logical shift for 32bit environments. */
-    $rng_next = ($rng->next() >> 1 & PHP_INT_MAX);
+    $rng_next = rng_rand($rng);
     if ($ret !== $rng_next) {
         die("NG, Result is inconsistent. RNG: ${rng_next} Result: ${ret}");
     }

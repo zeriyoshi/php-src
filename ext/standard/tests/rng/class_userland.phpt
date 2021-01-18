@@ -27,7 +27,7 @@ array_rand($array, 1, $rng);
 array_rand($array, 2, $rng);
 shuffle($array, $rng);
 str_shuffle('foobar', $rng);
-rng_range($rng, 1, 1000) . PHP_EOL;
+rng_rand($rng, 1, 1000) . PHP_EOL;
 rng_bytes($rng, 100) . PHP_EOL;
 
 class XorShift128PlusEx extends \RNG\XorShift128Plus

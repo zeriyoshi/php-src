@@ -3,7 +3,7 @@ Test class: MT19937: consistent result.
 --FILE--
 <?php
 const SEED = 12345;
-// ./sapi/cli/php -r '$t = new \RNG\MT19937(12345); $arr = []; for ($i = 0; $i < 1000; $i++) { $arr[] = $t->next() >> 1 & PHP_INT_MAX; } var_export($arr);'
+// ./sapi/cli/php -r '$t = new \RNG\MT19937(12345); $arr = []; for ($i = 0; $i < 1000; $i++) { $arr[] = rng_rand($t); } var_export($arr);'
 $result = array (
   0 => 1996335345,
   1 => 1911592690,
@@ -1009,8 +1009,7 @@ $result = array (
 
 $rng = new \RNG\MT19937(SEED);
 foreach ($result as $ret) {
-    /* virtually logical shift for 32bit environments. */
-    $rng_next = ($rng->next() >> 1 & PHP_INT_MAX);
+    $rng_next = rng_rand($rng);
     if ($ret !== $rng_next) {
         die("NG, Result is inconsistent. RNG: ${rng_next} Result: ${ret}");
     }

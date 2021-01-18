@@ -191,17 +191,25 @@ PHPAPI zend_long php_rng_range(zval *obj, zend_long min, zend_long max)
 	return (zend_long) (rng_rand_range32(obj, umax) + min);
 }
 
-PHP_FUNCTION(rng_range)
+PHP_FUNCTION(rng_rand)
 {
 	zval *zrng;
 	zend_long min, max;
 
-	ZEND_PARSE_PARAMETERS_START(3, 3)
+	ZEND_PARSE_PARAMETERS_START(1, 3)
 		Z_PARAM_OBJECT_OF_CLASS(zrng, rng_ce_RNG_RNGInterface)
+		Z_PARAM_OPTIONAL
 		Z_PARAM_LONG(min)
 		Z_PARAM_LONG(max)
 	ZEND_PARSE_PARAMETERS_END();
-	
+
+	if (ZEND_NUM_ARGS() == 1) {
+		uint32_t result;
+
+		php_rng_next(&result, zrng);
+		RETURN_LONG((zend_long) result >> 1);
+	}
+
 	if (UNEXPECTED(max < min)) {
 		zend_argument_value_error(2, "must be greater than or equal to argument #1 ($min)");
 		RETURN_THROWS();

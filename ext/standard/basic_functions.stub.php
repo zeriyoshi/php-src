@@ -1195,7 +1195,7 @@ function random_int(int $min, int $max): int {}
 
 /* rng.c */
 
-function rng_range(RNG\RNGInterface $rng, int $min, int $max): int {}
+function rng_rand(RNG\RNGInterface $rng, int $min = UNKNOWN, int $max = UNKNOWN): int {}
 
 function rng_bytes(RNG\RNGInterface $rng, int $length): string {}
 

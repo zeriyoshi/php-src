@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a0eee5b9b7b40e4fc1935b26818f59f5d382faa5 */
+ * Stub hash: 9be2b195a30a3813e8f3bb31edd6584a1e831235 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_set_time_limit, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, seconds, IS_LONG, 0)
@@ -1837,7 +1837,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_random_int, 0, 2, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, max, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rng_range, 0, 3, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rng_rand, 0, 1, IS_LONG, 0)
 	ZEND_ARG_OBJ_INFO(0, rng, RNG\\RNGInterface, 0)
 	ZEND_ARG_TYPE_INFO(0, min, IS_LONG, 0)
 	ZEND_ARG_TYPE_INFO(0, max, IS_LONG, 0)
@@ -2739,7 +2739,7 @@ ZEND_FUNCTION(mt_rand);
 ZEND_FUNCTION(mt_getrandmax);
 ZEND_FUNCTION(random_bytes);
 ZEND_FUNCTION(random_int);
-ZEND_FUNCTION(rng_range);
+ZEND_FUNCTION(rng_rand);
 ZEND_FUNCTION(rng_bytes);
 ZEND_FUNCTION(soundex);
 ZEND_FUNCTION(stream_select);
@@ -3382,7 +3382,7 @@ static const zend_function_entry ext_functions[] = {
 	ZEND_FALIAS(getrandmax, mt_getrandmax, arginfo_getrandmax)
 	ZEND_FE(random_bytes, arginfo_random_bytes)
 	ZEND_FE(random_int, arginfo_random_int)
-	ZEND_FE(rng_range, arginfo_rng_range)
+	ZEND_FE(rng_rand, arginfo_rng_rand)
 	ZEND_FE(rng_bytes, arginfo_rng_bytes)
 	ZEND_FE(soundex, arginfo_soundex)
 	ZEND_FE(stream_select, arginfo_stream_select)
