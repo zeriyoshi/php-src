@@ -233,7 +233,7 @@ PHP_FUNCTION(rng_bytes)
 	result = zend_string_alloc(size, 0);
 
 	while (generated_bytes <= size) {
-		php_rng_next(&buf, zrng); //TODO: check FAILURE
+		php_rng_next(&buf, zrng);
 		bytes = (uint8_t *) &buf;
 		for (i = 0; i < (sizeof(uint32_t) / sizeof(uint8_t)); i ++) {
 			ZSTR_VAL(result)[generated_bytes + i] = bytes[i];
