@@ -207,7 +207,7 @@ PHP_FUNCTION(rng_rand)
 		uint32_t result;
 
 		php_rng_next(&result, zrng);
-		RETURN_LONG((zend_long) result >> 1);
+		RETURN_LONG((zend_long) (result >> 1));
 	}
 
 	if (UNEXPECTED(max < min)) {
