@@ -247,7 +247,7 @@ PHP_METHOD(RNG_MT19937, __unserialize)
 
 	/* members */
 	members_zv = zend_hash_index_find(data, MT19937_N + 2);
-	if (!members_zv || Z_TYPE_P(members_zv) != IS_ARRAY) {
+	if (!members_zv || Z_TYPE_P(members_zv) != IS_ARRAY || state->i < 0) {
 		zend_throw_exception(NULL, "Incomplete or ill-formed serialization data", 0);
 		RETURN_THROWS();
 	}
