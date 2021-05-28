@@ -165,6 +165,8 @@ struct _php_core_globals {
 	char *syslog_ident;
 	bool have_called_openlog;
 	zend_long syslog_filter;
+
+	bool random_class_ignore_generated_size_exceeded;
 };
 
 
