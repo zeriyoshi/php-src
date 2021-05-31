@@ -344,7 +344,7 @@ static uint64_t xorshift128plus_next(void *state) {
 	return r;
 }
 
-static void* xorshift128plus_init() {
+static void* xorshift128plus_init(void) {
 	return ecalloc(1, sizeof(xorshift128plus_state));
 }
 
@@ -445,7 +445,7 @@ static uint64_t mt19937_next(void *state) {
 	return ( s1 ^ (s1 >> 18) );
 }
 
-static void* mt19937_init() {
+static void* mt19937_init(void) {
 	return ecalloc(1, sizeof(mt19937_state));
 }
 

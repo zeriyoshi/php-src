@@ -28,7 +28,7 @@ typedef struct _php_random_class_algo {
 	const unsigned char bytes;
 	const size_t state_size;
 	uint64_t (*next)(void *state);
-	void* (*init)();
+	void* (*init)(void);
 	void (*seed)(void *state, const zend_long seed);
 	int (*serialize)(void *state, zval *return_value);
 	int (*unserialize)(void *state, HashTable *data);
