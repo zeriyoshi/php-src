@@ -51,9 +51,9 @@ static inline php_random_class *random_class_from_obj(zend_object *obj) {
 PHPAPI int php_random_class_algo_register(const php_random_class_algo *algo);
 PHPAPI void php_random_class_algo_unregister(const char *ident);
 PHPAPI const php_random_class_algo* php_random_class_algo_find(const zend_string *ident);
-PHPAPI uint64_t php_random_class_next(php_random_class *random_class, zend_object *obj);
-PHPAPI zend_long php_random_class_range(php_random_class *random_class, zend_object *obj, zend_long min, zend_long max);
-PHPAPI void php_random_class_array_data_shuffle(php_random_class *random_class, zend_object *obj, zval *array);
-PHPAPI void php_random_class_string_shuffle(php_random_class *random_class, zend_object *obj, char *str, zend_long len);
+PHPAPI uint64_t php_random_class_next(php_random_class *random_class);
+PHPAPI zend_long php_random_class_range(php_random_class *random_class, zend_long min, zend_long max);
+PHPAPI void php_random_class_array_data_shuffle(php_random_class *random_class, zval *array);
+PHPAPI void php_random_class_string_shuffle(php_random_class *random_class, char *str, zend_long len);
 
 #endif

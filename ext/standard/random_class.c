@@ -29,10 +29,10 @@ static zend_array php_random_class_algos;
 static zend_class_entry *php_random_class_ce;
 static zend_object_handlers php_random_class_object_handlers;
 
-static uint32_t range32(php_random_class *random_class, zend_object *obj, uint32_t umax) {
+static uint32_t range32(php_random_class *random_class, uint32_t umax) {
 	uint32_t result, limit;
 
-	result = php_random_class_next(random_class, obj);
+	result = php_random_class_next(random_class);
 
 	/* Special case where no modulus is required */
 	if (UNEXPECTED(umax == UINT32_MAX)) {
@@ -52,19 +52,19 @@ static uint32_t range32(php_random_class *random_class, zend_object *obj, uint32
 
 	/* Discard numbers over the limit to avoid modulo bias */
 	while (UNEXPECTED(result > limit)) {
-		result = php_random_class_next(random_class, obj);
+		result = php_random_class_next(random_class);
 	}
 
 	return result % umax;
 }
 
 #if ZEND_ULONG_MAX > UINT32_MAX
-static uint64_t range64(php_random_class *random_class, zend_object *obj, uint64_t umax) {
+static uint64_t range64(php_random_class *random_class, uint64_t umax) {
 	uint64_t result, limit;
 
-	result = php_random_class_next(random_class, obj);
+	result = php_random_class_next(random_class);
 	if (random_class->algo && random_class->algo->bytes == 32) {
-		result = (result << 32) | php_random_class_next(random_class, obj);
+		result = (result << 32) | php_random_class_next(random_class);
 	}
 
 	/* Special case where no modulus is required */
@@ -85,9 +85,9 @@ static uint64_t range64(php_random_class *random_class, zend_object *obj, uint64
 
 	/* Discard numbers over the limit to avoid modulo bias */
 	while (UNEXPECTED(result > limit)) {
-		result = php_random_class_next(random_class, obj);
+		result = php_random_class_next(random_class);
 		if (random_class->algo && random_class->algo->bytes == 32) {
-			result = (result << 32) | php_random_class_next(random_class, obj);
+			result = (result << 32) | php_random_class_next(random_class);
 		}
 	}
 
@@ -133,7 +133,7 @@ const php_random_class_algo* php_random_class_algo_find(const zend_string *ident
 /* }}} */
 
 /* {{{ */
-uint64_t php_random_class_next(php_random_class *random_class, zend_object *obj)
+uint64_t php_random_class_next(php_random_class *random_class)
 {
 	zend_long ret;
 	zend_function *function;
@@ -145,10 +145,10 @@ uint64_t php_random_class_next(php_random_class *random_class, zend_object *obj)
 
 	/* call user implementation. */
 	ZVAL_STRING(&function_name, "next");
-	function = zend_hash_find_ptr(&obj->ce->function_table, Z_STR(function_name));
+	function = zend_hash_find_ptr(&random_class->std.ce->function_table, Z_STR(function_name));
 	zval_ptr_dtor(&function_name);
 
-	zend_call_known_instance_method_with_0_params(function, obj, &retval);
+	zend_call_known_instance_method_with_0_params(function, &random_class->std, &retval);
 	ret = Z_LVAL(retval);
 
 	return (uint64_t) ret;
@@ -156,22 +156,22 @@ uint64_t php_random_class_next(php_random_class *random_class, zend_object *obj)
 /* }}} */
 
 /* {{{ */
-zend_long php_random_class_range(php_random_class *random_class, zend_object *obj, zend_long min, zend_long max)
+zend_long php_random_class_range(php_random_class *random_class, zend_long min, zend_long max)
 {
 	zend_ulong umax = max - min;
 
 #if ZEND_ULONG_MAX > UINT32_MAX
 	if (umax > UINT32_MAX) {
-		return (zend_long) (range64(random_class, obj, umax) + min);
+		return (zend_long) (range64(random_class, umax) + min);
 	}
 #endif
 
-	return (zend_long) (range32(random_class, obj, umax) + min);
+	return (zend_long) (range32(random_class, umax) + min);
 }
 /* }}} */
 
 /* {{{ */
-void php_random_class_array_data_shuffle(php_random_class *random_class, zend_object *obj, zval *array)
+void php_random_class_array_data_shuffle(php_random_class *random_class, zval *array)
 {
 	uint32_t idx, j, n_elems;
 	Bucket *p, temp;
@@ -200,7 +200,7 @@ void php_random_class_array_data_shuffle(php_random_class *random_class, zend_ob
 			}
 		}
 		while (--n_left) {
-			rnd_idx = php_random_class_range(random_class, obj, 0, n_left);
+			rnd_idx = php_random_class_range(random_class, 0, n_left);
 			if (rnd_idx != n_left) {
 				temp = hash->arData[n_left];
 				hash->arData[n_left] = hash->arData[rnd_idx];
@@ -225,7 +225,7 @@ void php_random_class_array_data_shuffle(php_random_class *random_class, zend_ob
 			}
 		}
 		while (--n_left) {
-			rnd_idx = php_random_class_range(random_class, obj, 0, n_left);
+			rnd_idx = php_random_class_range(random_class, 0, n_left);
 			if (rnd_idx != n_left) {
 				temp = hash->arData[n_left];
 				hash->arData[n_left] = hash->arData[rnd_idx];
@@ -253,7 +253,7 @@ void php_random_class_array_data_shuffle(php_random_class *random_class, zend_ob
 /* }}} */
 
 /* {{{ */
-void php_random_class_string_shuffle(php_random_class *random_class, zend_object *obj, char *str, zend_long len)
+void php_random_class_string_shuffle(php_random_class *random_class, char *str, zend_long len)
 {
 	zend_long n_elems, rnd_idx, n_left;
 	char temp;
@@ -266,7 +266,7 @@ void php_random_class_string_shuffle(php_random_class *random_class, zend_object
 	n_left = n_elems;
 
 	while (--n_left) {
-		rnd_idx = php_random_class_range(random_class, obj, 0, n_left);
+		rnd_idx = php_random_class_range(random_class, 0, n_left);
 		if (rnd_idx != n_left) {
 			temp = str[n_left];
 			str[n_left] = str[rnd_idx];
@@ -633,7 +633,7 @@ PHP_METHOD(Random, nextInt)
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	ret = php_random_class_next(random_class, Z_OBJ_P(ZEND_THIS));
+	ret = php_random_class_next(random_class);
 	if (random_class->algo) {
 		if (random_class->algo->bytes > sizeof(zend_long)) {
 			if (PG(random_class_ignore_generated_size_exceeded)) {
@@ -667,7 +667,7 @@ PHP_METHOD(Random, getInt)
 		RETURN_THROWS();
 	}
 
-	RETURN_LONG(php_random_class_range(random_class, Z_OBJ_P(ZEND_THIS), min, max));
+	RETURN_LONG(php_random_class_range(random_class, min, max));
 }
 /* }}} */
 
@@ -694,9 +694,9 @@ PHP_METHOD(Random, getBytes)
 	ret = zend_string_alloc(size, 0);
 
 	while (generated_bytes <= size) {
-		buf = php_random_class_next(random_class, Z_OBJ_P(ZEND_THIS));
+		buf = php_random_class_next(random_class);
 		if (random_class->algo && random_class->algo->bytes == sizeof(uint32_t)) {
-			buf = (buf << 32) | php_random_class_next(random_class, Z_OBJ_P(ZEND_THIS));
+			buf = (buf << 32) | php_random_class_next(random_class);
 		}
 		bytes = (uint8_t *) &buf;
 		for (i = 0; i < (sizeof(uint64_t) / sizeof(uint8_t)); i ++) {
@@ -724,7 +724,7 @@ PHP_METHOD(Random, shuffleArray)
 
 	ZVAL_DUP(return_value, array);
 
-	php_random_class_array_data_shuffle(random_class, Z_OBJ_P(ZEND_THIS), return_value);
+	php_random_class_array_data_shuffle(random_class, return_value);
 }
 /* }}} */
 
@@ -740,7 +740,7 @@ PHP_METHOD(Random, shuffleString)
 
 	RETVAL_STRINGL(ZSTR_VAL(string), ZSTR_LEN(string));
 	if (Z_STRLEN_P(return_value) > 1) {
-		php_random_class_string_shuffle(random_class, Z_OBJ_P(ZEND_THIS), Z_STRVAL_P(return_value), (zend_long) Z_STRLEN_P(return_value));
+		php_random_class_string_shuffle(random_class, Z_STRVAL_P(return_value), (zend_long) Z_STRLEN_P(return_value));
 	}
 }
 /* }}} */
