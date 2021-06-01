@@ -63,7 +63,7 @@ static uint64_t range64(php_random_class *random_class, uint64_t umax) {
 	uint64_t result, limit;
 
 	result = php_random_class_next(random_class);
-	if (random_class->algo && random_class->algo->bytes == 32) {
+	if (random_class->algo && random_class->algo->generate_size == 32) {
 		result = (result << 32) | php_random_class_next(random_class);
 	}
 
@@ -86,7 +86,7 @@ static uint64_t range64(php_random_class *random_class, uint64_t umax) {
 	/* Discard numbers over the limit to avoid modulo bias */
 	while (UNEXPECTED(result > limit)) {
 		result = php_random_class_next(random_class);
-		if (random_class->algo && random_class->algo->bytes == 32) {
+		if (random_class->algo && random_class->algo->generate_size == 32) {
 			result = (result << 32) | php_random_class_next(random_class);
 		}
 	}
@@ -275,7 +275,6 @@ void php_random_class_string_shuffle(php_random_class *random_class, char *str, 
 	}
 }
 /* }}} */
-
 static zend_object *php_random_class_new(zend_class_entry *ce) {
 	php_random_class *random_class = zend_object_alloc(sizeof(php_random_class), ce);
 	zend_object_std_init(&random_class->std, ce);
@@ -283,6 +282,12 @@ static zend_object *php_random_class_new(zend_class_entry *ce) {
 	random_class->std.handlers = &php_random_class_object_handlers;
 
 	return &random_class->std;
+}
+
+static void php_random_class_state_initialize(php_random_class *random_class) {
+	if (random_class->algo && random_class->algo->state_size > 0) {
+		random_class->state = ecalloc(1, random_class->algo->state_size);
+	}
 }
 
 static void php_random_class_free_obj(zend_object *object) {
@@ -306,10 +311,8 @@ static zend_object *php_random_class_clone_obj(zend_object *object) {
 	
 	if (old->algo) {
 		new->algo = old->algo;
-		if (old->algo->init && old->algo->state_size && old->state) {
-			new->state = old->algo->init();
-			memcpy(new->state, old->state, old->algo->state_size);
-		}
+		php_random_class_state_initialize(new);
+		memcpy(new->state, old->state, old->algo->state_size);
 	}
 
 	return new_obj;
@@ -342,10 +345,6 @@ static uint64_t xorshift128plus_next(void *state) {
 	s->s[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
 
 	return r;
-}
-
-static void* xorshift128plus_init(void) {
-	return ecalloc(1, sizeof(xorshift128plus_state));
 }
 
 static void xorshift128plus_seed(void *state, const zend_long seed) {
@@ -391,7 +390,6 @@ const php_random_class_algo php_random_class_algo_xorshift128plus = {
 	sizeof(uint64_t),
 	sizeof(xorshift128plus_state),
 	xorshift128plus_next,
-	xorshift128plus_init,
 	xorshift128plus_seed,
 	xorshift128plus_serialize,
 	xorshift128plus_unserialize
@@ -443,10 +441,6 @@ static uint64_t mt19937_next(void *state) {
 	s1 ^= (s1 << 7) & 0x9d2c5680U;
 	s1 ^= (s1 << 15) & 0xefc60000U;
 	return ( s1 ^ (s1 >> 18) );
-}
-
-static void* mt19937_init(void) {
-	return ecalloc(1, sizeof(mt19937_state));
 }
 
 static void mt19937_seed(void *state, const zend_long seed) {
@@ -501,7 +495,6 @@ const php_random_class_algo php_random_class_algo_mt19937 = {
 	sizeof(uint32_t),
 	sizeof(mt19937_state),
 	mt19937_next,
-	mt19937_init,
 	mt19937_seed,
 	mt19937_serialize,
 	mt19937_unserialize
@@ -524,7 +517,6 @@ const php_random_class_algo php_random_class_algo_secure = {
 	sizeof(uint64_t),
 	0,
 	secure_next,
-	NULL,
 	NULL,
 	NULL,
 	NULL
@@ -605,16 +597,15 @@ PHP_METHOD(Random, __construct)
 			RETURN_THROWS();
 		}
 
-		if (algo->init) {
-			random_class->state = algo->init();
-			if (algo->seed) {
-				if (seed_is_null) {
-					seed = php_random_bytes_silent(&seed, sizeof(zend_long));
-				}
-
-				algo->seed(random_class->state, seed);
+		php_random_class_state_initialize(random_class);
+		if (algo->seed) {
+			if (seed_is_null) {
+				seed = php_random_bytes_silent(&seed, sizeof(zend_long));
 			}
+
+			algo->seed(random_class->state, seed);
 		}
+
 	} else if (! zend_string_equals_literal(algo_str, PHP_RANDOM_CLASS_ALGO_USER_DEFINED)) {
 		zend_argument_value_error(1, "must be a valid random number generator algorithm");
 		RETURN_THROWS();
@@ -635,7 +626,7 @@ PHP_METHOD(Random, nextInt)
 
 	ret = php_random_class_next(random_class);
 	if (random_class->algo) {
-		if (random_class->algo->bytes > sizeof(zend_long)) {
+		if (random_class->algo->generate_size > sizeof(zend_long)) {
 			if (PG(random_class_ignore_generated_size_exceeded)) {
 				ret = (zend_ulong) ret;
 			} else {
@@ -695,7 +686,7 @@ PHP_METHOD(Random, getBytes)
 
 	while (generated_bytes <= size) {
 		buf = php_random_class_next(random_class);
-		if (random_class->algo && random_class->algo->bytes == sizeof(uint32_t)) {
+		if (random_class->algo && random_class->algo->generate_size == sizeof(uint32_t)) {
 			buf = (buf << 32) | php_random_class_next(random_class);
 		}
 		bytes = (uint8_t *) &buf;
@@ -809,12 +800,9 @@ PHP_METHOD(Random, __unserialize)
 			zend_throw_exception(NULL, "Algorithm does not registered", 0);
 			RETURN_THROWS();
 		}
-
 		intern->algo = algo;
 
-		if (algo->init) {
-			intern->state = algo->init();
-		}
+		php_random_class_state_initialize(intern);
 
 		if (!algo->serialize || !algo->unserialize) {
 			zend_throw_exception(NULL, "Algorithm does not support serialization", 0);
