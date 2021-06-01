@@ -12,14 +12,12 @@ foreach (Random::getAlgos() as $algo) {
     }
 }
 
-$bytes = (new class(RANDOM_USER) extends Random {
-    protected $current = 0;
-
-    protected function next(): int
+$bytes = (new Random(new class() implements RandomNumberGenerator {
+    public function generate(): int
     {
-        return ++$this->current;
+        return random_int(1, 1000);
     }
-})->getBytes(255);
+}))->getBytes(255);
 
 if (! is_string($bytes) || ! strlen($bytes) === 255) {
     die("failue user");

@@ -15,22 +15,17 @@ $instances = array_map(
     }
 ));
 
-class Klass extends Random
+class UserRNG implements RandomNumberGenerator
 {
     protected int $current = 0;
 
-    public function __construct()
-    {
-        parent::__construct(RANDOM_USER);
-    }
-
-    protected function next():int
+    public function generate(): int
     {
         return ++$this->current;
     }
 }
 
-$instances[] = new Klass();
+$instances[] = new Random(new UserRNG());
 
 foreach ($instances as $instance) {
     $instance->nextInt();

@@ -11,12 +11,12 @@ foreach (Random::getAlgos() as $algo) {
     }
 }
 
-$result = (new class(RANDOM_USER) extends Random {
-    protected function next(): int
+$result = (new Random(new class() implements RandomNumberGenerator {
+    public function generate(): int
     {
-        return random_int(0, 1000);
+        return random_int(1, 1000);
     }
-})->getInt(50, 100);
+}))->getInt(50, 100);
 
 if (50 > $result || $result > 100) {
     die("failure algo: user result: ${result}");

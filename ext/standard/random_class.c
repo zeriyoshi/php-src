@@ -19,16 +19,19 @@
 #include "php.h"
 #include "info.h"
 
+#include "zend_exceptions.h"
+
 #include "php_random.h"
 #include "php_random_class.h"
 #include "random_class_arginfo.h"
 
-#include "zend_exceptions.h"
+PHPAPI zend_class_entry *php_random_class_ce_RandomNumberGenerator;
+PHPAPI zend_class_entry *php_random_class_ce_Random;
 
 static zend_array php_random_class_algos;
-static zend_class_entry *php_random_class_ce;
 static zend_object_handlers php_random_class_object_handlers;
 
+/* stolen from: mt_rand.c */
 static uint32_t range32(php_random_class *random_class, uint32_t umax) {
 	uint32_t result, limit;
 
@@ -59,6 +62,7 @@ static uint32_t range32(php_random_class *random_class, uint32_t umax) {
 }
 
 #if ZEND_ULONG_MAX > UINT32_MAX
+/* stolen from: mt_rand.c */
 static uint64_t range64(php_random_class *random_class, uint64_t umax) {
 	uint64_t result, limit;
 
@@ -134,24 +138,32 @@ const php_random_class_algo* php_random_class_algo_find(const zend_string *ident
 
 /* {{{ */
 uint64_t php_random_class_next(php_random_class *random_class)
-{
-	zend_long ret;
-	zend_function *function;
-	zval function_name, retval;
-	
+{	
 	if (random_class->algo) {
 		return random_class->algo->next(random_class->state);
 	}
 
-	/* call user implementation. */
-	ZVAL_STRING(&function_name, "next");
-	function = zend_hash_find_ptr(&random_class->std.ce->function_table, Z_STR(function_name));
-	zval_ptr_dtor(&function_name);
+	zval retval, rv;
+	zval *zrng = zend_read_property(random_class->std.ce, &random_class->std, "rng", sizeof("rng") - 1, 0, &rv);
+	if (Z_ISNULL_P(zrng)) {
+		return 0;
+	}
 
-	zend_call_known_instance_method_with_0_params(function, &random_class->std, &retval);
-	ret = Z_LVAL(retval);
+	zend_object *obj = Z_OBJ_P(zrng);
+	if (!obj) {
+		return 0;
+	}
 
-	return (uint64_t) ret;
+	zend_string *method_name_generate = zend_string_init("generate", sizeof("generate") - 1, 0);
+	zend_function *func = zend_hash_find_ptr(&obj->ce->function_table, method_name_generate);
+	zend_string_release(method_name_generate);
+	if (!func) {
+		return 0;
+	}
+
+	zend_call_known_instance_method_with_0_params(func, obj, &retval);
+
+	return (uint64_t) Z_LVAL(retval);
 }
 /* }}} */
 
@@ -284,9 +296,13 @@ static zend_object *php_random_class_new(zend_class_entry *ce) {
 	return &random_class->std;
 }
 
-static void php_random_class_state_initialize(php_random_class *random_class) {
-	if (random_class->algo && random_class->algo->state_size > 0) {
-		random_class->state = ecalloc(1, random_class->algo->state_size);
+static void php_random_class_state_initialize(php_random_class *random_class, const php_random_class_algo *algo) {
+	if (!algo) {
+		return;
+	}
+
+	if (algo->state_size > 0) {
+		random_class->state = ecalloc(1, algo->state_size);
 	}
 }
 
@@ -311,7 +327,7 @@ static zend_object *php_random_class_clone_obj(zend_object *object) {
 	
 	if (old->algo) {
 		new->algo = old->algo;
-		php_random_class_state_initialize(new);
+		php_random_class_state_initialize(new, new->algo);
 		memcpy(new->state, old->state, old->algo->state_size);
 	}
 
@@ -523,10 +539,6 @@ const php_random_class_algo php_random_class_algo_secure = {
 };
 /* secure END */
 
-/* user BEGIN */
-#define PHP_RANDOM_CLASS_ALGO_USER_DEFINED "user"
-/* user END */
-
 /* {{{ PHP_INI */
 PHP_INI_BEGIN()
 	STD_PHP_INI_BOOLEAN("random.ignore_generated_size_exceeded", "0", PHP_INI_ALL, OnUpdateBool, random_class_ignore_generated_size_exceeded, php_core_globals, core_globals)
@@ -572,46 +584,60 @@ PHP_METHOD(Random, getAlgoInfo)
 /* {{{ */
 PHP_METHOD(Random, __construct)
 {
+	php_random_class *random_class = Z_RANDOM_CLASS_P(ZEND_THIS);
 	zend_string *algo_str = NULL;
+	zend_object *rng = NULL;
 	zend_long seed;
 	bool seed_is_null = 1;
-	const php_random_class_algo *algo;
 
 	ZEND_PARSE_PARAMETERS_START(0, 2)
 		Z_PARAM_OPTIONAL
-		Z_PARAM_STR(algo_str)
+		Z_PARAM_OBJ_OF_CLASS_OR_STR(rng, php_random_class_ce_RandomNumberGenerator, algo_str)
 		Z_PARAM_LONG_OR_NULL(seed, seed_is_null)
 	ZEND_PARSE_PARAMETERS_END();
 
-	algo =
-		algo_str == NULL
-			? &php_random_class_algo_xorshift128plus
-			: php_random_class_algo_find(algo_str);
-
-	if (algo) {
-		php_random_class *random_class = Z_RANDOM_CLASS_P(ZEND_THIS);
-		random_class->algo = algo;
-
-		if (!algo->seed && !seed_is_null) {
-			zend_argument_value_error(2, "algorithm does not support seed with value");
+	if (rng) {
+		zval property_rng_value;
+		
+		if (!seed_is_null) {
+			zend_argument_value_error(2, "RandomNumberGenerator does not support seed with value");
 			RETURN_THROWS();
 		}
 
-		php_random_class_state_initialize(random_class);
-		if (algo->seed) {
-			if (seed_is_null) {
-				seed = php_random_bytes_silent(&seed, sizeof(zend_long));
-			}
+		ZVAL_OBJ(&property_rng_value, rng);
+		zend_string *property_rng_name = zend_string_init("rng", sizeof("rng") - 1, 0);
+		zend_std_write_property(&random_class->std, property_rng_name, &property_rng_value, NULL);
+		zend_string_release(property_rng_name);
+		
+		return;
+	}
 
-			algo->seed(random_class->state, seed);
-		}
+	const php_random_class_algo *algo;
 
-	} else if (! zend_string_equals_literal(algo_str, PHP_RANDOM_CLASS_ALGO_USER_DEFINED)) {
+	algo = algo_str == NULL 
+		? &php_random_class_algo_xorshift128plus 
+		: php_random_class_algo_find(algo_str);
+		
+	if (!algo) {
 		zend_argument_value_error(1, "must be a valid random number generator algorithm");
 		RETURN_THROWS();
-	} else if (Z_OBJCE_P(ZEND_THIS)->type == ZEND_INTERNAL_CLASS) {
-		zend_throw_exception(NULL, "User defined algorithm must be inherited", 0);
+	}
+
+	random_class->algo = algo;
+
+	if (!algo->seed && !seed_is_null) {
+		zend_argument_value_error(2, "algorithm does not support seed with value");
 		RETURN_THROWS();
+	}
+
+	php_random_class_state_initialize(random_class, algo);
+
+	if (algo->seed) {
+		if (seed_is_null) {
+			seed = php_random_bytes_silent(&seed, sizeof(zend_long));
+		}
+		
+		algo->seed(random_class->state, seed);
 	}
 }
 /* }}} */
@@ -744,11 +770,6 @@ PHP_METHOD(Random, __serialize)
 
 	ZEND_PARSE_PARAMETERS_NONE();
 
-	if (Z_OBJCE_P(ZEND_THIS)->ce_flags & ZEND_ACC_ANON_CLASS) {
-		zend_throw_exception(NULL, "Anonymous class serialization is not allowed", 0);
-		RETURN_THROWS();
-	}
-
 	if (intern->algo && (!intern->algo->serialize || !intern->algo->unserialize)) {
 		zend_throw_exception(NULL, "Algorithm does not support serialization", 0);
 		RETURN_THROWS();
@@ -762,7 +783,11 @@ PHP_METHOD(Random, __serialize)
 	zend_hash_next_index_insert(Z_ARRVAL_P(return_value), &tmp);
 
 	/* algo */
-	ZVAL_STRING(&tmp, intern->algo ? intern->algo->ident : PHP_RANDOM_CLASS_ALGO_USER_DEFINED);
+	if (intern->algo) {
+		ZVAL_STRING(&tmp, intern->algo->ident);
+	} else {
+		ZVAL_NULL(&tmp);
+	}
 	zend_hash_next_index_insert(Z_ARRVAL_P(return_value), &tmp);
 
 	/* state */
@@ -776,7 +801,6 @@ PHP_METHOD(Random, __serialize)
 PHP_METHOD(Random, __unserialize)
 {
 	php_random_class *intern = Z_RANDOM_CLASS_P(ZEND_THIS);
-	const php_random_class_algo *algo;
 	HashTable *data;
 	zval *tmp, *members_zv;
 
@@ -794,7 +818,9 @@ PHP_METHOD(Random, __unserialize)
 
 	/* state */
 	tmp = zend_hash_index_find(data, 1);
-	if (! zend_string_equals_literal(Z_STR_P(tmp), PHP_RANDOM_CLASS_ALGO_USER_DEFINED)) {
+	if (!Z_ISNULL_P(tmp)) {
+		const php_random_class_algo *algo;
+
 		algo = php_random_class_algo_find(Z_STR_P(tmp));
 		if (!algo) {
 			zend_throw_exception(NULL, "Algorithm does not registered", 0);
@@ -802,7 +828,7 @@ PHP_METHOD(Random, __unserialize)
 		}
 		intern->algo = algo;
 
-		php_random_class_state_initialize(intern);
+		php_random_class_state_initialize(intern, algo);
 
 		if (!algo->serialize || !algo->unserialize) {
 			zend_throw_exception(NULL, "Algorithm does not support serialization", 0);
@@ -817,40 +843,31 @@ PHP_METHOD(Random, __unserialize)
 }
 /* }}} */
 
-/* {{{ */
-PHP_METHOD(Random, next)
-{
-	zend_throw_exception(NULL, "Must be override the method next(): int", 0);
-	RETURN_THROWS();
-}
-/* }}} */
-
 PHP_MINIT_FUNCTION(random_class)
 {
-	zend_class_entry ce;
-
 	REGISTER_INI_ENTRIES();
 
 	zend_hash_init(&php_random_class_algos, 1, NULL, ZVAL_PTR_DTOR, 1);
 
-	/* XorShift128+ */
+	/* algo: XorShift128+ */
 	if (FAILURE == php_random_class_algo_register(&php_random_class_algo_xorshift128plus)) { return FAILURE; }
 	REGISTER_STRING_CONSTANT("RANDOM_XORSHIFT128PLUS", php_random_class_algo_xorshift128plus.ident, CONST_CS | CONST_PERSISTENT);
 
-	/* MT19937 */
+	/* algo: MT19937 */
 	if (FAILURE == php_random_class_algo_register(&php_random_class_algo_mt19937)) { return FAILURE; }
 	REGISTER_STRING_CONSTANT("RANDOM_MT19937", php_random_class_algo_mt19937.ident, CONST_CS | CONST_PERSISTENT);
 
-	/* secure */
+	/* algo: secure */
 	if (FAILURE == php_random_class_algo_register(&php_random_class_algo_secure)) { return FAILURE; }
 	REGISTER_STRING_CONSTANT("RANDOM_SECURE", php_random_class_algo_secure.ident, CONST_CS | CONST_PERSISTENT);
 
-	/* user */
-	REGISTER_STRING_CONSTANT("RANDOM_USER", PHP_RANDOM_CLASS_ALGO_USER_DEFINED, CONST_CS | CONST_PERSISTENT);
+	/* interface: RandomNumberGenerator */
+	php_random_class_ce_RandomNumberGenerator = register_class_RandomNumberGenerator();
 
-	INIT_CLASS_ENTRY(ce, "Random", class_Random_methods);
-	php_random_class_ce = zend_register_internal_class(&ce);
-	php_random_class_ce->create_object = php_random_class_new;
+	/* class:Random */
+	php_random_class_ce_Random = register_class_Random();
+
+	php_random_class_ce_Random->create_object = php_random_class_new;
 	memcpy(&php_random_class_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	php_random_class_object_handlers.offset = XtOffsetOf(php_random_class, std);
 	php_random_class_object_handlers.free_obj = php_random_class_free_obj;
