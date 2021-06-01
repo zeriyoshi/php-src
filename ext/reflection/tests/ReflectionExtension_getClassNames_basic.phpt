@@ -8,7 +8,7 @@ $standard = new ReflectionExtension('standard');
 var_dump($standard->getClassNames());
 ?>
 --EXPECT--
-array(5) {
+array(6) {
   [0]=>
   string(22) "__PHP_Incomplete_Class"
   [1]=>
@@ -18,5 +18,7 @@ array(5) {
   [3]=>
   string(9) "Directory"
   [4]=>
+  string(21) "RandomNumberGenerator"
+  [5]=>
   string(6) "Random"
 }
