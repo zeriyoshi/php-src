@@ -1,7 +1,5 @@
 --TEST--
 Test Random class serialize / unserialize
---INI--
-random.ignore_generated_size_exceeded=1
 --FILE--
 <?php
 

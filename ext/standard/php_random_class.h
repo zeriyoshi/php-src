@@ -19,7 +19,6 @@
 
 PHP_MINIT_FUNCTION(random_class);
 PHP_MSHUTDOWN_FUNCTION(random_class);
-PHP_MINFO_FUNCTION(random_class);
 
 extern PHPAPI zend_class_entry *php_random_class_ce_RandomNumberGenerator;
 extern PHPAPI zend_class_entry *php_random_class_ce_Random;

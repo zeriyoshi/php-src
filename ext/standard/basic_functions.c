@@ -568,7 +568,6 @@ PHP_MINFO_FUNCTION(basic) /* {{{ */
 	BASIC_MINFO_SUBMODULE(mail)
 	php_info_print_table_end();
 	BASIC_MINFO_SUBMODULE(assert)
-	BASIC_MINFO_SUBMODULE(random_class)
 }
 /* }}} */
 

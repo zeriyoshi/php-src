@@ -6,8 +6,6 @@ if (PHP_INT_SIZE >= 8) {
     echo 'skip this test only available on 32bit enviroment.';
 }
 ?>
---INI--
-random.ignore_generated_size_exceeded=1
 --FILE--
 <?php
 

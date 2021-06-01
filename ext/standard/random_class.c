@@ -539,12 +539,6 @@ const php_random_class_algo php_random_class_algo_secure = {
 };
 /* secure END */
 
-/* {{{ PHP_INI */
-PHP_INI_BEGIN()
-	STD_PHP_INI_BOOLEAN("random.ignore_generated_size_exceeded", "0", PHP_INI_ALL, OnUpdateBool, random_class_ignore_generated_size_exceeded, php_core_globals, core_globals)
-PHP_INI_END()
-/* }}} */
-
 /* {{{ */
 PHP_METHOD(Random, getAlgos)
 {
@@ -653,12 +647,8 @@ PHP_METHOD(Random, nextInt)
 	ret = php_random_class_next(random_class);
 	if (random_class->algo) {
 		if (random_class->algo->generate_size > sizeof(zend_long)) {
-			if (PG(random_class_ignore_generated_size_exceeded)) {
-				ret = (zend_ulong) ret;
-			} else {
-				zend_throw_exception(NULL, "Generated random number size exceeded", 0);
-				RETURN_THROWS();
-			}
+			/* truncate */
+			ret = (zend_ulong) ret;
 		}
 		/* right shift for future machine compatibility. */
 		ret = ret >> 1;
@@ -845,8 +835,6 @@ PHP_METHOD(Random, __unserialize)
 
 PHP_MINIT_FUNCTION(random_class)
 {
-	REGISTER_INI_ENTRIES();
-
 	zend_hash_init(&php_random_class_algos, 1, NULL, ZVAL_PTR_DTOR, 1);
 
 	/* algo: XorShift128+ */
@@ -878,13 +866,6 @@ PHP_MINIT_FUNCTION(random_class)
 
 PHP_MSHUTDOWN_FUNCTION(random_class)
 {
-	UNREGISTER_INI_ENTRIES();
-
 	zend_hash_destroy(&php_random_class_algos);
 	return SUCCESS;
-}
-
-PHP_MINFO_FUNCTION(random_class)
-{
-	DISPLAY_INI_ENTRIES();
 }
