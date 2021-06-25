@@ -1,0 +1,7 @@
+ARG_ENABLE('random', 'random support', 'no');
+
+if (PHP_RANDOM != 'no') {
+	AC_DEFINE('HAVE_RANDOM', 1, 'random support enabled');
+
+	EXTENSION('random', 'random.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+}
