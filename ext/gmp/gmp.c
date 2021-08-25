@@ -31,7 +31,7 @@
 #include "gmp_arginfo.h"
 
 /* Needed for gmp_random() */
-#include "ext/standard/php_rand.h"
+#include "ext/random/php_random.h"
 #include "ext/standard/php_lcg.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(gmp)

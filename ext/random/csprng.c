@@ -40,33 +40,12 @@
 # include <sanitizer/msan_interface.h>
 #endif
 
-#ifdef ZTS
-int random_globals_id;
-#else
-php_random_globals random_globals;
-#endif
-
-static void random_globals_ctor(php_random_globals *random_globals_p)
-{
-	random_globals_p->fd = -1;
-}
-
-static void random_globals_dtor(php_random_globals *random_globals_p)
-{
-	if (random_globals_p->fd > 0) {
-		close(random_globals_p->fd);
-		random_globals_p->fd = -1;
-	}
-}
+static ZEND_DECLARE_MODULE_GLOBALS(random)
 
 /* {{{ */
 PHP_MINIT_FUNCTION(random)
 {
-#ifdef ZTS
-	ts_allocate_id(&random_globals_id, sizeof(php_random_globals), (ts_allocate_ctor)random_globals_ctor, (ts_allocate_dtor)random_globals_dtor);
-#else
-	random_globals_ctor(&random_globals);
-#endif
+    RANDOM_G(fd) = -1;
 
 	return SUCCESS;
 }
@@ -75,9 +54,10 @@ PHP_MINIT_FUNCTION(random)
 /* {{{ */
 PHP_MSHUTDOWN_FUNCTION(random)
 {
-#ifndef ZTS
-	random_globals_dtor(&random_globals);
-#endif
+    if (RANDOM_G(fd) > 0) {
+        close(RANDOM_G(fd));
+        RANDOM_G(fd) = -1;
+    }
 
 	return SUCCESS;
 }

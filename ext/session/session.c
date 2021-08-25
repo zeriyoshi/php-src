@@ -37,7 +37,7 @@
 #include "php_variables.h"
 #include "php_session.h"
 #include "session_arginfo.h"
-#include "ext/standard/php_random.h"
+#include "ext/random/php_random.h"
 #include "ext/standard/php_var.h"
 #include "ext/date/php_date.h"
 #include "ext/standard/php_lcg.h"

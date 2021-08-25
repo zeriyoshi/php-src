@@ -23,9 +23,7 @@
  */
 
 #include "php.h"
-#include "php_rand.h"
 #include "php_random.h"
-#include "php_mt_rand.h"
 
 /* MT RAND FUNCTIONS */
 
@@ -92,6 +90,8 @@
 #define twist(m,u,v)  (m ^ (mixBits(u,v)>>1) ^ ((uint32_t)(-(int32_t)(loBit(v))) & 0x9908b0dfU))
 #define twist_php(m,u,v)  (m ^ (mixBits(u,v)>>1) ^ ((uint32_t)(-(int32_t)(loBit(u))) & 0x9908b0dfU))
 
+static ZEND_DECLARE_MODULE_GLOBALS(random)
+
 /* {{{ php_mt_initialize */
 static inline void php_mt_initialize(uint32_t seed, uint32_t *state)
 {
@@ -118,11 +118,11 @@ static inline void php_mt_reload(void)
 	/* Generate N new values in state
 	   Made clearer and faster by Matthew Bellew (matthew.bellew@home.com) */
 
-	uint32_t *state = BG(state);
+	uint32_t *state = RANDOM_G(state);
 	uint32_t *p = state;
 	int i;
 
-	if (BG(mt_rand_mode) == MT_RAND_MT19937) {
+	if (RANDOM_G(mt_rand_mode) == MT_RAND_MT19937) {
 		for (i = N - M; i--; ++p)
 			*p = twist(p[M], p[0], p[1]);
 		for (i = M; --i; ++p)
@@ -136,8 +136,8 @@ static inline void php_mt_reload(void)
 			*p = twist_php(p[M-N], p[0], p[1]);
 		*p = twist_php(p[M-N], p[0], state[0]);
 	}
-	BG(left) = N;
-	BG(next) = state;
+	RANDOM_G(left) = N;
+	RANDOM_G(next) = state;
 }
 /* }}} */
 
@@ -145,11 +145,11 @@ static inline void php_mt_reload(void)
 PHPAPI void php_mt_srand(uint32_t seed)
 {
 	/* Seed the generator with a simple uint32 */
-	php_mt_initialize(seed, BG(state));
+	php_mt_initialize(seed, RANDOM_G(state));
 	php_mt_reload();
 
 	/* Seed only once */
-	BG(mt_rand_is_seeded) = 1;
+	RANDOM_G(mt_rand_is_seeded) = 1;
 }
 /* }}} */
 
@@ -161,7 +161,7 @@ PHPAPI uint32_t php_mt_rand(void)
 
 	uint32_t s1;
 
-	if (UNEXPECTED(!BG(mt_rand_is_seeded))) {
+	if (UNEXPECTED(!RANDOM_G(mt_rand_is_seeded))) {
 		zend_long bytes;
 		if (php_random_bytes_silent(&bytes, sizeof(zend_long)) == FAILURE) {
 			bytes = GENERATE_SEED();
@@ -169,12 +169,12 @@ PHPAPI uint32_t php_mt_rand(void)
 		php_mt_srand(bytes);
 	}
 
-	if (BG(left) == 0) {
+	if (RANDOM_G(left) == 0) {
 		php_mt_reload();
 	}
-	--BG(left);
+	--RANDOM_G(left);
 
-	s1 = *BG(next)++;
+	s1 = *RANDOM_G(next)++;
 	s1 ^= (s1 >> 11);
 	s1 ^= (s1 <<  7) & 0x9d2c5680U;
 	s1 ^= (s1 << 15) & 0xefc60000U;
@@ -202,10 +202,10 @@ PHP_FUNCTION(mt_srand)
 
 	switch (mode) {
 		case MT_RAND_PHP:
-			BG(mt_rand_mode) = MT_RAND_PHP;
+			RANDOM_G(mt_rand_mode) = MT_RAND_PHP;
 			break;
 		default:
-			BG(mt_rand_mode) = MT_RAND_MT19937;
+			RANDOM_G(mt_rand_mode) = MT_RAND_MT19937;
 	}
 
 	php_mt_srand(seed);
@@ -295,7 +295,7 @@ PHPAPI zend_long php_mt_rand_common(zend_long min, zend_long max)
 {
 	int64_t n;
 
-	if (BG(mt_rand_mode) == MT_RAND_MT19937) {
+	if (RANDOM_G(mt_rand_mode) == MT_RAND_MT19937) {
 		return php_mt_rand_range(min, max);
 	}
 

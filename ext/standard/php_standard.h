@@ -48,7 +48,6 @@
 #include "php_assert.h"
 #include "php_versioning.h"
 #include "php_password.h"
-#include "php_random.h"
 
 #include "php_version.h"
 #define PHP_STANDARD_VERSION PHP_VERSION

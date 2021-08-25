@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: a7e7f1f40e8ea4f8a532bce27b4841329a5a9663 */
+ * Stub hash: 44f51ab5f2dbbf59dee68f6d7a13527613356c41 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_set_time_limit, 0, 1, _IS_BOOL, 0)
 	ZEND_ARG_TYPE_INFO(0, seconds, IS_LONG, 0)
@@ -1812,33 +1812,6 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_quoted_printable_encode arginfo_base64_encode
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_mt_srand, 0, 0, IS_VOID, 0)
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, seed, IS_LONG, 0, "0")
-	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, mode, IS_LONG, 0, "MT_RAND_MT19937")
-ZEND_END_ARG_INFO()
-
-#define arginfo_srand arginfo_mt_srand
-
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rand, 0, 0, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, min, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, max, IS_LONG, 0)
-ZEND_END_ARG_INFO()
-
-#define arginfo_mt_rand arginfo_rand
-
-#define arginfo_mt_getrandmax arginfo_ob_get_level
-
-#define arginfo_getrandmax arginfo_ob_get_level
-
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_random_bytes, 0, 1, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, length, IS_LONG, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_random_int, 0, 2, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, min, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, max, IS_LONG, 0)
-ZEND_END_ARG_INFO()
-
 #define arginfo_soundex arginfo_base64_encode
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_stream_select, 0, 4, MAY_BE_LONG|MAY_BE_FALSE)
@@ -2729,12 +2702,6 @@ ZEND_FUNCTION(proc_get_status);
 #endif
 ZEND_FUNCTION(quoted_printable_decode);
 ZEND_FUNCTION(quoted_printable_encode);
-ZEND_FUNCTION(mt_srand);
-ZEND_FUNCTION(rand);
-ZEND_FUNCTION(mt_rand);
-ZEND_FUNCTION(mt_getrandmax);
-ZEND_FUNCTION(random_bytes);
-ZEND_FUNCTION(random_int);
 ZEND_FUNCTION(soundex);
 ZEND_FUNCTION(stream_select);
 ZEND_FUNCTION(stream_context_create);
@@ -3372,14 +3339,6 @@ static const zend_function_entry ext_functions[] = {
 #endif
 	ZEND_FE(quoted_printable_decode, arginfo_quoted_printable_decode)
 	ZEND_FE(quoted_printable_encode, arginfo_quoted_printable_encode)
-	ZEND_FE(mt_srand, arginfo_mt_srand)
-	ZEND_FALIAS(srand, mt_srand, arginfo_srand)
-	ZEND_FE(rand, arginfo_rand)
-	ZEND_FE(mt_rand, arginfo_mt_rand)
-	ZEND_FE(mt_getrandmax, arginfo_mt_getrandmax)
-	ZEND_FALIAS(getrandmax, mt_getrandmax, arginfo_getrandmax)
-	ZEND_FE(random_bytes, arginfo_random_bytes)
-	ZEND_FE(random_int, arginfo_random_int)
 	ZEND_FE(soundex, arginfo_soundex)
 	ZEND_FE(stream_select, arginfo_stream_select)
 	ZEND_FE(stream_context_create, arginfo_stream_context_create)

@@ -15,26 +15,50 @@
    |          Pedro Melo <melo@ip.pt>                                     |
    |          Sterling Hughes <sterling@php.net>                          |
    |                                                                      |
-   | Based on code from: Shawn Cokus <Cokus@math.washington.edu>          |
+   | Based on code from: Richard J. Wagner <rjwagner@writeme.com>         |
+   |                     Makoto Matsumoto <matumoto@math.keio.ac.jp>      |
+   |                     Takuji Nishimura                                 |
+   |                     Shawn Cokus <Cokus@math.washington.edu>          |
    +----------------------------------------------------------------------+
  */
 
-#ifndef PHP_MT_RAND_H
-#define PHP_MT_RAND_H
+#include "php.h"
+#include "php_random.h"
 
-#include "php_lcg.h"
-#include "php_rand.h"
+/* {{{ php_srand */
+PHPAPI void php_srand(zend_long seed)
+{
+	php_mt_srand(seed);
+}
+/* }}} */
 
-#define PHP_MT_RAND_MAX ((zend_long) (0x7FFFFFFF)) /* (1<<31) - 1 */
+/* {{{ php_rand */
+PHPAPI zend_long php_rand(void)
+{
+	return php_mt_rand();
+}
+/* }}} */
 
-#define MT_RAND_MT19937 0
-#define MT_RAND_PHP 1
+/* {{{ Returns a random number from Mersenne Twister */
+PHP_FUNCTION(rand)
+{
+	zend_long min;
+	zend_long max;
+	int argc = ZEND_NUM_ARGS();
 
-PHPAPI void php_mt_srand(uint32_t seed);
-PHPAPI uint32_t php_mt_rand(void);
-PHPAPI zend_long php_mt_rand_range(zend_long min, zend_long max);
-PHPAPI zend_long php_mt_rand_common(zend_long min, zend_long max);
+	if (argc == 0) {
+		RETURN_LONG(php_mt_rand() >> 1);
+	}
 
-PHP_MINIT_FUNCTION(mt_rand);
+	ZEND_PARSE_PARAMETERS_START(2, 2)
+		Z_PARAM_LONG(min)
+		Z_PARAM_LONG(max)
+	ZEND_PARSE_PARAMETERS_END();
 
-#endif	/* PHP_MT_RAND_H */
+	if (max < min) {
+		RETURN_LONG(php_mt_rand_common(max, min));
+	}
+
+	RETURN_LONG(php_mt_rand_common(min, max));
+}
+/* }}} */
