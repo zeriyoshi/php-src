@@ -53,7 +53,7 @@ typedef enum _zend_cpu_feature {
 	ZEND_CPU_FEATURE_TSC_DEADLINE 	= (1<<24),
 	ZEND_CPU_FEATURE_AES			= (1<<25),
 	ZEND_CPU_FEATURE_XSAVE			= (1<<26),
-	ZEND_CPU_FEATURE_OSXSAVE		= (1<<27) ,
+	ZEND_CPU_FEATURE_OSXSAVE		= (1<<27),
 	ZEND_CPU_FEATURE_AVX			= (1<<28),
 	ZEND_CPU_FEATURE_F16C			= (1<<29),
 	/* intentionally don't support	= (1<<30) */
@@ -97,8 +97,17 @@ typedef enum _zend_cpu_feature {
 	/*intentionally don't support   = (1<<31 | ZEND_CPU_EDX_MASK)*/
 } zend_cpu_feature;
 
+typedef struct _zend_cpu_info {
+	uint32_t eax;
+	uint32_t ebx;
+	uint32_t ecx;
+	uint32_t edx;
+	uint32_t initialized;
+} zend_cpu_info;
+
 void zend_cpu_startup(void);
 ZEND_API int zend_cpu_supports(zend_cpu_feature feature);
+ZEND_API void zend_copy_cpuinfo(zend_cpu_info *dst);
 
 #ifndef __has_attribute
 # define __has_attribute(x) 0

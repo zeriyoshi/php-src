@@ -20,8 +20,10 @@
 #include <math.h>
 
 #include "php.h"
-#include "zend_exceptions.h"
 #include "php_random.h"
+
+#include "zend_exceptions.h"
+#include "zend_cpuinfo.h"
 
 #ifdef PHP_WIN32
 # include "win32/winutil.h"
@@ -68,6 +70,8 @@ PHP_MINIT_FUNCTION(random)
 	random_globals_ctor(&random_globals);
 #endif
 
+	RANDOM_G(hwstate) = HWRNG_STATE_UNINITIALIZED;
+
 	return SUCCESS;
 }
 /* }}} */
@@ -83,9 +87,67 @@ PHP_MSHUTDOWN_FUNCTION(random)
 }
 /* }}} */
 
+#if defined(__x86_64__) || defined(__i386__)
+/* HWRNG in x86_64 and x86 platforms */
+static inline int supports_rdrand()
+{
+	zend_cpu_info cpuinfo;
+
+	zend_copy_cpuinfo(&cpuinfo);
+
+	return (cpuinfo.ecx & (1 << 30));
+}
+
+static inline void rdrand(uint64_t *buf)
+{
+	__asm__ volatile (
+		"1: rdrand %0; jnc 1b;" : "=r" (buf)
+	);
+}
+
+static inline int random_bytes_hwrng(void *bytes, size_t size)
+{
+	size_t i;
+
+	if (RANDOM_G(hwstate) == HWRNG_STATE_UNINITIALIZED) {
+		if (!supports_rdrand()) {
+			RANDOM_G(hwstate) = HWRNG_STATE_NOTSUPPORTED;
+			return FAILURE;
+		}
+		RANDOM_G(hwstate) = HWRNG_STATE_INITIALIZED;
+	}
+
+	for (i = 0; i < size/sizeof(zend_long); i++) {
+		rdrand(bytes + (i * sizeof(zend_long)));
+	}
+
+	i *= sizeof(zend_long);
+
+	bytes += i;
+	size -= i;
+
+	if (size > 0) {
+		uint64_t buf;
+		rdrand(&buf);
+		memcpy(bytes, &buf, size);
+	}
+	
+	return SUCCESS;
+}
+#endif
+
 /* {{{ php_random_bytes */
 PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
 {
+#if defined(__x86_64__) || defined(__i386__)
+	/* Only on HWRNG supported platforms */
+	/* TODO: supports AArch64 ARMv8.5 RNG */
+	if (RANDOM_G(hwstate) != HWRNG_STATE_NOTSUPPORTED && sizeof(zend_long) > size) {
+		if (random_bytes_hwrng(bytes, size) == SUCCESS) {
+			return SUCCESS;
+		}
+	}
+#endif
 #ifdef PHP_WIN32
 	/* Defer to CryptGenRandom on Windows */
 	if (php_win32_get_random_bytes(bytes, size) == FAILURE) {

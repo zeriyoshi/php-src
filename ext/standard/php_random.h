@@ -22,8 +22,15 @@ BEGIN_EXTERN_C()
 PHP_MINIT_FUNCTION(random);
 PHP_MSHUTDOWN_FUNCTION(random);
 
+typedef enum _hwrng_state {
+   HWRNG_STATE_UNINITIALIZED  = 0,
+   HWRNG_STATE_INITIALIZED    = 1,
+   HWRNG_STATE_NOTSUPPORTED   = 2,
+} hwrng_state;
+
 typedef struct {
 	int fd;
+   hwrng_state hwstate;
 } php_random_globals;
 
 #define php_random_bytes_throw(b, s) php_random_bytes((b), (s), 1)

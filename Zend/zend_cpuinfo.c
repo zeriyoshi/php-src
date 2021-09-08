@@ -18,14 +18,6 @@
 
 #include "zend_cpuinfo.h"
 
-typedef struct _zend_cpu_info {
-	uint32_t eax;
-	uint32_t ebx;
-	uint32_t ecx;
-	uint32_t edx;
-	uint32_t initialized;
-} zend_cpu_info;
-
 static zend_cpu_info cpuinfo = {0};
 
 #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
@@ -150,4 +142,8 @@ ZEND_API int zend_cpu_supports(zend_cpu_feature feature) {
 	} else {
 		return (cpuinfo.ecx & feature);
 	}
+}
+
+ZEND_API void zend_copy_cpuinfo(zend_cpu_info *dst) {
+	memcpy(dst, &cpuinfo, sizeof(zend_cpu_info));
 }
