@@ -177,7 +177,7 @@ AC_DEFUN([PHP_ADD_MAKEFILE_FRAGMENT],[
 ])
 
 dnl
-dnl PHP_ADD_SOURCES(source-path, sources [, special-flags [, type]])
+dnl PHP_ADD_SOURCES(source-path, sources [, special-flags [, type [, disable_lto]]])
 dnl
 dnl Adds sources which are located relative to source-path to the array of type
 dnl type. Sources are processed with optional special-flags which are passed to
@@ -190,7 +190,7 @@ dnl
 dnl Which array to append to?
 dnl
 AC_DEFUN([PHP_ADD_SOURCES],[
-  PHP_ADD_SOURCES_X($1, $2, $3, ifelse($4,sapi,PHP_SAPI_OBJS,PHP_GLOBAL_OBJS))
+  PHP_ADD_SOURCES_X($1, $2, $3, ifelse($4,sapi,PHP_SAPI_OBJS,PHP_GLOBAL_OBJS), ,$5)
 ])
 
 dnl
@@ -202,23 +202,33 @@ AC_DEFUN([_PHP_ASSIGN_BUILD_VARS],[
 ifelse($1,shared,[
   b_c_pre=$shared_c_pre
   b_cxx_pre=$shared_cxx_pre
-  b_c_meta=$shared_c_meta
-  b_cxx_meta=$shared_cxx_meta
+  ifelse($2,yes,[
+    b_c_meta=$shared_c_nolto_meta
+    b_cxx_meta=$shared_cxx_nolto_meta
+  ],[
+    b_c_meta=$shared_c_meta
+    b_cxx_meta=$shared_cxx_meta
+  ])
   b_c_post=$shared_c_post
   b_cxx_post=$shared_cxx_post
 ],[
   b_c_pre=$php_c_pre
   b_cxx_pre=$php_cxx_pre
-  b_c_meta=$php_c_meta
-  b_cxx_meta=$php_cxx_meta
+  ifelse($2,yes,[
+    b_c_meta=$php_c_nolto_meta
+    b_cxx_meta=$php_cxx_nolto_meta
+  ],[
+    b_c_meta=$php_c_meta
+    b_cxx_meta=$php_cxx_meta
+  ])
   b_c_post=$php_c_post
   b_cxx_post=$php_cxx_post
-])dnl
+])
   b_lo=[$]$1_lo
 ])
 
 dnl
-dnl PHP_ADD_SOURCES_X(source-path, sources[, special-flags[, target-var[, shared]]])
+dnl PHP_ADD_SOURCES_X(source-path, sources[, special-flags[, target-var[, shared [, disable_lto]]]])
 dnl
 dnl Additional to PHP_ADD_SOURCES (see above), this lets you set the name of the
 dnl array target-var directly, as well as whether shared objects will be built
@@ -233,8 +243,8 @@ dnl ac_srcdir/ac_bdir include trailing slash
   *[)] ac_srcdir="$abs_srcdir/$1/"; ac_bdir="$1/"; ac_inc="-I$ac_bdir -I$ac_srcdir" ;;
   esac
 
-dnl how to build .. shared or static?
-  ifelse($5,yes,_PHP_ASSIGN_BUILD_VARS(shared),_PHP_ASSIGN_BUILD_VARS(php))
+dnl how to build .. shared or static
+  ifelse($5,yes,_PHP_ASSIGN_BUILD_VARS(shared, $6),_PHP_ASSIGN_BUILD_VARS(php, $6))
 
 dnl Iterate over the sources.
   old_IFS=[$]IFS
@@ -788,9 +798,11 @@ dnl
 AC_DEFUN([PHP_BUILD_PROGRAM],[
   php_c_pre='$(LIBTOOL) --mode=compile $(CC)'
   php_c_meta='$(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)'
+  php_c_nolto_meta='$(COMMON_FLAGS) $(CFLAGS_NOLTO_CLEAN) $(EXTRA_CFLAGS)'
   php_c_post=
   php_cxx_pre='$(LIBTOOL) --mode=compile $(CXX)'
   php_cxx_meta='$(COMMON_FLAGS) $(CXXFLAGS_CLEAN) $(EXTRA_CXXFLAGS)'
+  php_cxx_nolto_meta='$(COMMON_FLAGS) $(CXXFLAGS_NOLTO_CLEAN) $(EXTRA_CXXFLAGS)'
   php_cxx_post=
   php_lo=lo
 
@@ -801,9 +813,11 @@ AC_DEFUN([PHP_BUILD_PROGRAM],[
 
   shared_c_pre='$(LIBTOOL) --mode=compile $(CC)'
   shared_c_meta='$(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS) '$pic_setting
+  shared_c_nolto_meta='$(COMMON_FLAGS) $(CFLAGS_NOLTO_CLEAN) $(EXTRA_CFLAGS) '$pic_setting
   shared_c_post=
   shared_cxx_pre='$(LIBTOOL) --mode=compile $(CXX)'
   shared_cxx_meta='$(COMMON_FLAGS) $(CXXFLAGS_CLEAN) $(EXTRA_CXXFLAGS) '$pic_setting
+  shared_cxx_nolto_meta='$(COMMON_FLAGS) $(CXXFLAGS_NOLTO_CLEAN) $(EXTRA_CXXFLAGS) '$pic_setting
   shared_cxx_post=
   shared_lo=lo
 ])
@@ -902,7 +916,7 @@ AC_DEFUN([PHP_GEN_BUILD_DIRS],[
 ])
 
 dnl
-dnl PHP_NEW_EXTENSION(extname, sources [, shared [, sapi_class [, extra-cflags [, cxx [, zend_ext]]]]])
+dnl PHP_NEW_EXTENSION(extname, sources [, shared [, sapi_class [, extra-cflags [, cxx [, zend_ext [, disble_lto]]]]]])
 dnl
 dnl Includes an extension in the build.
 dnl
@@ -926,7 +940,7 @@ AC_DEFUN([PHP_NEW_EXTENSION],[
   if test "$3" != "shared" && test "$3" != "yes" && test "$4" != "cli"; then
 dnl ---------------------------------------------- Static module
     [PHP_]translit($1,a-z_-,A-Z__)[_SHARED]=no
-    PHP_ADD_SOURCES($ext_dir,$2,$ac_extra,)
+    PHP_ADD_SOURCES($ext_dir,$2,$ac_extra,,$8)
     EXT_STATIC="$EXT_STATIC $1;$ext_dir"
     if test "$3" != "nocli"; then
       EXT_CLI_STATIC="$EXT_CLI_STATIC $1;$ext_dir"
@@ -935,7 +949,7 @@ dnl ---------------------------------------------- Static module
     if test "$3" = "shared" || test "$3" = "yes"; then
 dnl ---------------------------------------------- Shared module
       [PHP_]translit($1,a-z_-,A-Z__)[_SHARED]=yes
-      PHP_ADD_SOURCES_X($ext_dir,$2,$ac_extra -DZEND_COMPILE_DL_EXT=1,shared_objects_$1,yes)
+      PHP_ADD_SOURCES_X($ext_dir,$2,$ac_extra -DZEND_COMPILE_DL_EXT=1,shared_objects_$1,yes,$8)
       PHP_SHARED_MODULE($1,shared_objects_$1, $ext_builddir, $6, $7)
       AC_DEFINE_UNQUOTED([COMPILE_DL_]translit($1,a-z_-,A-Z__), 1, Whether to build $1 as dynamic module)
     fi
@@ -946,11 +960,11 @@ dnl ---------------------------------------------- CLI static module
     [PHP_]translit($1,a-z_-,A-Z__)[_SHARED]=no
     case "$PHP_SAPI" in
       cgi|embed|phpdbg[)]
-        PHP_ADD_SOURCES($ext_dir,$2,$ac_extra,)
+        PHP_ADD_SOURCES($ext_dir,$2,$ac_extra,,$8)
         EXT_STATIC="$EXT_STATIC $1;$ext_dir"
         ;;
       *[)]
-        PHP_ADD_SOURCES($ext_dir,$2,$ac_extra,cli)
+        PHP_ADD_SOURCES($ext_dir,$2,$ac_extra,cli,$8)
         ;;
     esac
     EXT_CLI_STATIC="$EXT_CLI_STATIC $1;$ext_dir"
