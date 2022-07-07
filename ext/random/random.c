@@ -467,8 +467,8 @@ PHPAPI zend_long php_rand(void)
 }
 /* }}} */
 
-/* {{{ php_random_bytes */
-PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
+/* {{{ php_random_secure_bytes */
+PHPAPI bool php_random_secure_bytes(void *bytes, size_t size, bool should_throw)
 {
 #ifdef PHP_WIN32
 	/* Defer to CryptGenRandom on Windows */
@@ -476,7 +476,7 @@ PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
 		if (should_throw) {
 			zend_throw_exception(zend_ce_exception, "Could not gather sufficient random data", 0);
 		}
-		return FAILURE;
+		return false;
 	}
 #elif HAVE_COMMONCRYPTO_COMMONRANDOM_H
 	/*
@@ -489,7 +489,7 @@ PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
 		if (should_throw) {
 			zend_throw_exception(zend_ce_exception, "Error generating bytes", 0);
 		}
-		return FAILURE;
+		return false;
 	}
 #elif HAVE_DECL_ARC4RANDOM_BUF && ((defined(__OpenBSD__) && OpenBSD >= 201405) || (defined(__NetBSD__) && __NetBSD_Version__ >= 700000001) || defined(__APPLE__) || defined(__GLIBC__))
 	arc4random_buf(bytes, size);
@@ -550,7 +550,7 @@ PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
 				if (should_throw) {
 					zend_throw_exception(zend_ce_exception, "Cannot open source device", 0);
 				}
-				return FAILURE;
+				return false;
 			}
 			/* Does the file exist and is it a character device? */
 			if (fstat(fd, &st) != 0 ||
@@ -564,7 +564,7 @@ PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
 				if (should_throw) {
 					zend_throw_exception(zend_ce_exception, "Error reading from source device", 0);
 				}
-				return FAILURE;
+				return false;
 			}
 			RANDOM_G(random_fd) = fd;
 		}
@@ -580,12 +580,36 @@ PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
 			if (should_throw) {
 				zend_throw_exception(zend_ce_exception, "Could not gather sufficient random data", 0);
 			}
-			return FAILURE;
+			return false;
 		}
 	}
 #endif
 
-	return SUCCESS;
+	return true;
+}
+/* }}} */
+
+/* {{{ php_random_bytes */
+PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw)
+{
+	if (RANDOM_G(secure_buffer) && RANDOM_G(secure_buffer_size) >= size) {
+		if (size >= (RANDOM_G(secure_buffer_size) - RANDOM_G(secure_buffer_pos))) {
+			if (php_random_secure_bytes(RANDOM_G(secure_buffer), RANDOM_G(secure_buffer_size), should_throw)) {
+				RANDOM_G(secure_buffer_pos) = 0;
+			} else {
+				return FAILURE;
+			}
+		}
+
+		memcpy(bytes, RANDOM_G(secure_buffer) + RANDOM_G(secure_buffer_pos), size);
+		RANDOM_G(secure_buffer_pos) += size;
+
+		return SUCCESS;
+	}
+
+	return php_random_secure_bytes(bytes, size, should_throw)
+		? SUCCESS 
+		: FAILURE;
 }
 /* }}} */
 
@@ -780,6 +804,12 @@ PHP_FUNCTION(random_int)
 }
 /* }}} */
 
+/* {{{ INI Settings */
+PHP_INI_BEGIN()
+	STD_PHP_INI_ENTRY("random.secure_buffer_size", "256K", PHP_INI_SYSTEM, OnUpdateLong, secure_buffer_size, zend_random_globals, random_globals)
+PHP_INI_END()
+/* }}} */
+
 /* {{{ PHP_GINIT_FUNCTION */
 static PHP_GINIT_FUNCTION(random)
 {
@@ -858,7 +888,25 @@ PHP_MINIT_FUNCTION(random)
 	random_randomizer_object_handlers.free_obj = randomizer_free_obj;
 	random_randomizer_object_handlers.clone_obj = NULL;
 
+	REGISTER_INI_ENTRIES();
+
 	register_random_symbols(module_number);
+
+	if (RANDOM_G(secure_buffer_size) > 0) {
+		RANDOM_G(secure_buffer) = pemalloc(RANDOM_G(secure_buffer_size), true);
+	} else {
+		RANDOM_G(secure_buffer) = NULL;
+	}
+	RANDOM_G(secure_buffer_pos) = 0;
+
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ PHP_MSHUTDOWN_FUNCTION */
+PHP_MSHUTDOWN_FUNCTION(random)
+{
+	UNREGISTER_INI_ENTRIES();
 
 	return SUCCESS;
 }
@@ -880,7 +928,7 @@ zend_module_entry random_module_entry = {
 	"random",					/* Extension name */
 	ext_functions,				/* zend_function_entry */
 	PHP_MINIT(random),			/* PHP_MINIT - Module initialization */
-	NULL,						/* PHP_MSHUTDOWN - Module shutdown */
+	PHP_MSHUTDOWN(random),		/* PHP_MSHUTDOWN - Module shutdown */
 	PHP_RINIT(random),			/* PHP_RINIT - Request initialization */
 	NULL,						/* PHP_RSHUTDOWN - Request shutdown */
 	NULL,						/* PHP_MINFO - Module info */

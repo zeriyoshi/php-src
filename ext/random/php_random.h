@@ -196,6 +196,7 @@ static inline uint64_t php_random_pcgoneseq128xslrr64_rotr64(php_random_uint128_
 # define php_random_int_throw(min, max, result) php_random_int((min), (max), (result), 1)
 # define php_random_int_silent(min, max, result) php_random_int((min), (max), (result), 0)
 
+PHPAPI bool php_random_secure_bytes(void *bytes, size_t size, bool should_throw);
 PHPAPI int php_random_bytes(void *bytes, size_t size, bool should_throw);
 PHPAPI int php_random_int(zend_long min, zend_long max, zend_long *result, bool should_throw);
 
@@ -282,6 +283,7 @@ static inline php_random_randomizer *php_random_randomizer_from_obj(zend_object 
 PHPAPI php_random_status *php_random_status_alloc(const php_random_algo *algo, const bool persistent);
 PHPAPI php_random_status *php_random_status_copy(const php_random_algo *algo, php_random_status *old_status, php_random_status *new_status);
 PHPAPI void php_random_status_free(php_random_status *status, const bool persistent);
+
 PHPAPI php_random_engine *php_random_engine_common_init(zend_class_entry *ce, zend_object_handlers *handlers, const php_random_algo *algo);
 PHPAPI void php_random_engine_common_free_object(zend_object *object);
 PHPAPI zend_object *php_random_engine_common_clone_object(zend_object *object);
@@ -313,6 +315,9 @@ ZEND_BEGIN_MODULE_GLOBALS(random)
 	bool combined_lcg_seeded;
 	php_random_status *mt19937;
 	bool mt19937_seeded;
+	size_t secure_buffer_size;
+	size_t secure_buffer_pos;
+	void *secure_buffer;
 	int random_fd;
 ZEND_END_MODULE_GLOBALS(random)
 
