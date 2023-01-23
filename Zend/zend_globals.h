@@ -284,6 +284,10 @@ struct _zend_executor_globals {
 	zend_ulong reserved_stack_size;
 #endif
 
+#ifdef ZEND_DEBUG
+	bool suppress_arginfo_zpp_mismatch;
+#endif
+
 	void *reserved[ZEND_MAX_RESERVED_RESOURCES];
 };
 
