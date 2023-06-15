@@ -23,8 +23,7 @@ cat > $ext_builddir/lib/timelib_config.h <<EOF
 #else
 # include <php_config.h>
 #endif
-#include <inttypes.h>
-#include <stdint.h>
+#include <php_stdint.h>
 
 #include "zend.h"
 

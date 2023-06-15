@@ -11,4 +11,4 @@ support.
 Build Requirements
 ------------------
 
-On Debian: ``apt install libcpputest-dev re2c``
+On Debian: ``apt install libcpputest-dev``

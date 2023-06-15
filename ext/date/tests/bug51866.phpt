@@ -105,7 +105,18 @@ object(DateTime)#%d (3) {
   ["timezone"]=>
   string(%d) "%s"
 }
-bool(false)
+array(4) {
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+}
 
 
 string(7) "Y-m-d +"
@@ -137,4 +148,15 @@ object(DateTime)#%d (3) {
   ["timezone"]=>
   string(%d) "%s"
 }
-bool(false)
+array(4) {
+  ["warning_count"]=>
+  int(0)
+  ["warnings"]=>
+  array(0) {
+  }
+  ["error_count"]=>
+  int(0)
+  ["errors"]=>
+  array(0) {
+  }
+}
